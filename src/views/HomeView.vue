@@ -2,6 +2,7 @@
   <div class="home">
     <button class="bnt" @click="addGlb('4dc15f621edd7945acba4d38796a32e8')">加载1</button>
     <button class="bnt" @click="addGlb('x16card')">加载2</button>
+    <button class="bnt" @click="initDragControls">可拖拽</button>
     <button class="bnt" @click="addRectangle">增加</button>
     <button class="bnt" @click="setRectangle">修改</button>
     <button class="bnt" @click="deleteRectangle">删除</button>
@@ -36,12 +37,13 @@ let camera = null;
 let renderer = null;
 // 控制器对象
 let controls = null;
+// 添加性能检测器
+let stats = addStats()
 
 
-function Throttle(fn, delay) {
+function Throttle(fn, delay = 200) {
   let open = true;
   return function (...data) {
-    console.log(222)
     if (!open) {
       //休息时间 暂不接客
       return false
@@ -49,8 +51,8 @@ function Throttle(fn, delay) {
     // 工作时间，执行函数并且在间隔期内把状态位设为无效
     open = false
     setTimeout(() => {
-      fn(...data)
       open = true;
+      fn(...data)
     }, delay)
   }
 }
@@ -104,8 +106,6 @@ export default {
   mounted() {
     // 创建三维
     this.init();
-    // 添加性能检测器
-    this.stats = addStats()
   },
   methods: {
     init() {
@@ -174,23 +174,20 @@ export default {
       // })
       // mesh.position.set(5, 0, 0)
       setTimeout(() => {
-        this.addGlb('4dc15f621edd7945acba4d38796a32e8');
+        // this.addGlb('4dc15f621edd7945acba4d38796a32e8');
+        this.addGlb('demo');
       }, 2000)
       this.render();
       controls = new OrbitControls(camera, renderer.domElement);//创建控件对象
       controls.addEventListener('change', this.render);//监听鼠标、键盘事件
     },
-    render() {
-      console.log(2222)
+    render: Throttle(function () {
       //执行渲染操作   指定场景、相机作为参数
-      Throttle(() => {
-        console.log(66666)
-        renderer.render(scene, camera);
-      }, 200)
-      if (this.stats) {
-        this.stats.update();
+      renderer.render(scene, camera);
+      if (stats) {
+        stats.update();
       }
-    },
+    }),
     // 调用方法创建形状
     /**
      * 第一个参数xyz
@@ -219,6 +216,14 @@ export default {
     },
     // 调用方法删除形状
     deleteRectangle() {
+      scene.children.forEach(item => {
+        if (item.isGroup) {
+          scene.remove(item)
+          this.render();
+        }
+      })
+
+
       for (let i = this.mesh.children.length - 1; i >= 0; i--) {
         this.mesh.remove(this.mesh.children[i]);
       }
@@ -226,8 +231,28 @@ export default {
     },
     // 调用方法删除形状
     setRectangle() {
-      this.mesh.position.set(++this.mesh.position.x, this.mesh.position.y, this.mesh.position.z);
-      this.render();
+      scene.children.forEach(item => {
+        if (item.isGroup) {
+          // item.scale.set(++item.scale.x, 1, 1);
+          // this.render();
+          // console.log(item)
+          //mesh:模型
+          let box = new THREE.Box3().setFromObject(item);
+          console.log('box', box)
+          console.log('size', box.getSize());
+          let geometry = new THREE.BoxGeometry(box.max.x, box.max.y, box.max.z); //创建一个立方体几何对象Geometry
+          let material = new THREE.MeshLambertMaterial({
+            color: 0xff0000,
+            opacity: 0.5,
+            transparent: true
+          }); //材质对象Material
+          let mesh = new THREE.Mesh(geometry, material); //网格模型对象Mesh
+          scene.add(mesh);
+          this.render();
+        }
+      })
+      // this.mesh.position.set(++this.mesh.position.x, this.mesh.position.y, this.mesh.position.z);
+      // this.render();
     },
     // 添加拖拽控件
     initDragControls() {
@@ -237,25 +262,45 @@ export default {
 
       // 过滤不是 Mesh 的物体,例如辅助网格
       let objects = [];
-
-
-      objects.push(this.mesh)
-
+      scene.children.forEach(item => {
+        if (item.type === 'Group') {
+          objects.push(item)
+        }
+      })
 
       console.log(objects, 'objects')
       // 初始化拖拽控件
       let dragControls = new DragControls(objects, camera, renderer.domElement);
 
+
       // 鼠标略过事件
       dragControls.addEventListener('hoveron', (event) => {
+        // dragControls.transformGroup = true
+        // console.log(event)
         // 让变换控件对象和选中的对象绑定
         // transformControls.attach(event.object);
       });
+      dragControls.addEventListener('hoveroff', (event) => {
+        // dragControls.transformGroup = false
+      })
       // 开始拖拽
       dragControls.addEventListener('dragstart', (event) => {
         console.log('dragstart', event)
         controls.enabled = false;
       });
+      // 拖拽过程
+      dragControls.addEventListener('drag', (event) => {
+
+        let parent = this.recursionId(event.object);
+        let name = event.object.name; // event.object即为外部模型，在这里可以通过外层模型的name属性找到内部模型
+        let x = event.object.position.x
+        let y = event.object.position.y
+        let z = event.object.position.z
+        parent.position.x = x // 给内部模型位置赋值
+        parent.position.y = y
+        parent.position.z = z
+      });
+
       // 拖拽结束
       dragControls.addEventListener('dragend', (event) => {
         console.log('dragend', event)
@@ -263,6 +308,17 @@ export default {
         console.log('结束', this.mesh)
         this.render();
       });
+    },
+    // 通过递归对比id找到group然后移动整个group
+    recursionId(data) {
+      let parent = null;
+      if (!data.parent.isScene) {
+        parent = this.recursionId(data.parent)
+      } else {
+        console.log(1111111, data)
+        return data;
+      }
+      return parent;
     },
     // 加载glb模型
     addGlb(text) {
@@ -273,15 +329,17 @@ export default {
       gltfLoader.load(
           `static/glb/${text}.glb`,
           (gltf) => {
-            console.log(gltf);
             //可以设置每个mash的纹理
             let i = 0;
             gltf.scene.traverse(obj => {
+              // console.log(obj)
               i++;
             })
-            gltf.scene.rotateY(Math.PI / 1)
+            gltf.scene.rotateY(Math.PI / 4)
             scene.add(gltf.scene)
+            console.log(scene, i);
             console.timeEnd();
+            // this.initDragControls();
             this.render();
           }, (xhr) => {
             console.log((xhr.loaded / xhr.total * 100) + '% loaded'), xhr;
