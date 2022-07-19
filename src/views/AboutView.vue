@@ -45,7 +45,7 @@ export default {
       // camera = new THREE.OrthographicCamera(-s * k, s * k, s, -s, 1, 1000);
       // 透视投影相机（人眼模式、近大远小）
       camera = new THREE.PerspectiveCamera(70, width / height, 0.1, 1000);
-      camera.position.set(0, 0, 10); //设置相机位置
+      camera.position.set(0, 0, 100); //设置相机位置
       camera.lookAt(scene.position); //设置相机方向(指向的场景对象)
       /**
        * 创建渲染器对象
@@ -57,14 +57,13 @@ export default {
       /**
        * 创建几何体
        * */
-      let geometry = new THREE.BoxGeometry(1, 1, 1); //创建一个立方体几何对象Geometry
+      let geometry = new THREE.BoxGeometry(50, 50, 50); //创建一个立方体几何对象Geometry
       let material = new THREE.MeshLambertMaterial({
         color: 0x00ff00
       }); //材质对象Material
       let mesh = new THREE.Mesh(geometry, material); //网格模型对象Mesh
       scene.add(mesh); //网格模型添加到场景中
       this.render();
-      camera.position.set(-2, 5, 10); //设置相机位置
       camera.lookAt(scene.position); //设置相机方向(指向的场景对象)
       this.render();
       /**

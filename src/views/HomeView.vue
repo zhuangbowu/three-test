@@ -24,6 +24,7 @@ import addStats from '@/utils/stats'
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js'
 import {DRACOLoader} from 'three/examples/jsm/loaders/DRACOLoader.js'
 import {LoadingManager} from 'three'
+import utils from "@/utils/utils";
 
 // 场景对象Scene
 let scene = null;
@@ -152,12 +153,14 @@ export default {
 
 
       // let mesh = this.addRectangle({
-      //   x: 50,
-      //   y: 10,
-      //   z: 10
+      //   x: 1,
+      //   y: 1,
+      //   z: 1
       // }, {
-      //   color: 0x0000ff
+      //   color: 0xff0000
       // })
+      // mesh.position.set(-1, -1, -1)
+      // scene.add(mesh);
       // this.port.forEach(item => {
       //   let color = 0xff0000;
       //   if (item.state) {
@@ -181,7 +184,7 @@ export default {
       controls = new OrbitControls(camera, renderer.domElement);//创建控件对象
       controls.addEventListener('change', this.render);//监听鼠标、键盘事件
     },
-    render: Throttle(function () {
+    render: utils.Throttle(function () {
       //执行渲染操作   指定场景、相机作为参数
       renderer.render(scene, camera);
       if (stats) {
@@ -234,14 +237,15 @@ export default {
       scene.children.forEach(item => {
         if (item.isGroup) {
           // item.scale.set(++item.scale.x, 1, 1);
+          // item.scale.set(++item.scale.x, 1, 1);
           // this.render();
           // console.log(item)
           //mesh:模型
           let box = new THREE.Box3().expandByObject(item);
-          console.log('box', box)
+          console.log('box', box.max.x - box.min.x)
           // let size = box.getSize();
           // console.log('size', size)
-          let geometry = new THREE.BoxGeometry(box.max.x, box.max.y, box.max.z); //创建一个立方体几何对象Geometry
+          let geometry = new THREE.BoxGeometry(box.max.x - box.min.x, box.max.y - box.min.y, box.max.z - box.min.z); //创建一个立方体几何对象Geometry
           let material = new THREE.MeshLambertMaterial({
             color: 0xff0000,
             opacity: 0.5,
@@ -336,14 +340,14 @@ export default {
               // console.log(obj)
               i++;
             })
-            gltf.scene.rotateY(Math.PI / 4)
+            // gltf.scene.rotateY(Math.PI / 4)
             scene.add(gltf.scene)
-            console.log(scene, i);
+            console.log(gltf, i);
             console.timeEnd();
             // this.initDragControls();
             this.render();
           }, (xhr) => {
-            console.log((xhr.loaded / xhr.total * 100) + '% loaded'), xhr;
+            console.log(xhr, (xhr.loaded / xhr.total * 100) + '% loaded');
           }, (e) => {
             console.error('啊出错了', e)
           }
