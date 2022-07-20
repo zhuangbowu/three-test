@@ -1,12 +1,15 @@
 <template>
   <div class="home">
-    <button class="bnt" @click="addGlb('4dc15f621edd7945acba4d38796a32e8')">加载1</button>
-    <button class="bnt" @click="addGlb('x16card')">加载2</button>
-    <button class="bnt" @click="initDragControls">可拖拽</button>
-    <button class="bnt" @click="addRectangle">增加</button>
-    <button class="bnt" @click="setRectangle">修改</button>
-    <button class="bnt" @click="deleteRectangle">删除</button>
-    <button class="bnt" @click="render">更新</button>
+    <el-button @click="addGlb(1,'4dc15f621edd7945acba4d38796a32e8')">加载1</el-button>
+    <el-button @click="addGlb(1,'x16card')">加载2</el-button>
+    <el-button @click="initDragControls">可拖拽</el-button>
+    <el-button @click="addRectangle">增加</el-button>
+    <el-button @click="setRectangle">修改</el-button>
+    <el-button @click="deleteRectangle">删除</el-button>
+    <el-button @click="getSize">查询模型的宽高深的值</el-button>
+    <el-input type="text" v-model="modelVal"></el-input>
+    <el-button @click="setSize">修改模型的宽高深</el-button>
+    <el-button @click="render">更新</el-button>
     <!-- 3D模型容器 -->
     <div id="container"></div>
   </div>
@@ -92,7 +95,8 @@ export default {
       network: {
         id: 'sdasdasdawadsa5da',
         type: '102-4-5'
-      }
+      },
+      modelVal: ''
     }
   },
   created() {
@@ -124,7 +128,7 @@ export default {
        * 光源设置
        */
       point = new THREE.PointLight(0xffffff);
-      point.position.set(10, 10, 40); //点光源位置
+      point.position.set(0, 0, 3000); //点光源位置
       scene.add(point); //点光源添加到场景中
       //环境光
       ambient = new THREE.AmbientLight(0x444444);
@@ -140,8 +144,8 @@ export default {
       // 正投影相机
       // camera = new THREE.OrthographicCamera(-s * k, s * k, s, -s, 1, 1000);
       // 透视投影相机（人眼模式、近大远小）
-      camera = new THREE.PerspectiveCamera(70, width / height, 0.1, 1000);
-      camera.position.set(0, 0, 10); //设置相机位置
+      camera = new THREE.PerspectiveCamera(70, width / height, 0.1, 28000);
+      camera.position.set(0, 0, 3000); //设置相机位置
       camera.lookAt(scene.position); //设置相机方向(指向的场景对象)
       /**
        * 创建渲染器对象
@@ -178,7 +182,9 @@ export default {
       // mesh.position.set(5, 0, 0)
       setTimeout(() => {
         // this.addGlb('4dc15f621edd7945acba4d38796a32e8');
-        this.addGlb('demo');
+        // this.addGlb('demo');
+        this.addGlb(0, 'QM9ISwNNdzB8UAoOZpF8A3AXSJz3QQIdM9O2lacSsnjlN9YsNt1JXuXl5fa2JnWqgch2Vo4SmGDDVDyAhV5nDmTeKlFDhQc2QuYSE6pkuhgPLoFnVBoWf23W7n6JuuFucPCMqiOv5tkMzOqrjc1opzp3eu5NYImVlPwVJG2JCyuCWieW86D9KleO57kLQTsExkbViGH3');
+
       }, 2000)
       this.render();
       controls = new OrbitControls(camera, renderer.domElement);//创建控件对象
@@ -259,6 +265,26 @@ export default {
       // this.mesh.position.set(++this.mesh.position.x, this.mesh.position.y, this.mesh.position.z);
       // this.render();
     },
+    getSize() {
+      scene.children.forEach(item => {
+        if (item.isGroup) {
+          let box = new THREE.Box3().expandByObject(item);
+          console.log(item, box)
+        }
+      })
+    },
+    setSize() {
+      scene.children.forEach(item => {
+        if (item.isGroup) {
+          let box = new THREE.Box3().expandByObject(item);
+          if (!item.originalBox) {
+            item.originalBox = box;
+          }
+          item.scale.set(this.modelVal / (item.originalBox.max.x - item.originalBox.min.x), item.scale.y, item.scale.z);
+          this.render();
+        }
+      })
+    },
     // 添加拖拽控件
     initDragControls() {
       // 添加平移控件
@@ -326,7 +352,7 @@ export default {
       return parent;
     },
     // 加载glb模型
-    addGlb(text) {
+    addGlb(type, text) {
       const gltfLoader = new GLTFLoader(new LoadingManager());
       // GLTF loader
       gltfLoader.setDRACOLoader(this.dracoLoader);   //gltfloader使用dracoLoader
@@ -340,14 +366,28 @@ export default {
               // console.log(obj)
               i++;
             })
-            // gltf.scene.rotateY(Math.PI / 4)
-            scene.add(gltf.scene)
-            console.log(gltf, i);
+
+            if (type === 1) {
+              scene.children.forEach(item => {
+                if (item.isGroup) {
+                  item.attach(gltf.scene)
+                }
+              })
+            } else {
+              scene.add(gltf.scene);
+            }
+
             console.timeEnd();
-            // this.initDragControls();
             this.render();
+            console.log(scene)
+            // gltf.scene.rotateY(Math.PI / 4)
+            // scene.add(gltf.scene)
+            // console.log(scene, i);
+            // console.timeEnd();
+            // this.initDragControls();
+            // this.render();
           }, (xhr) => {
-            console.log(xhr, (xhr.loaded / xhr.total * 100) + '% loaded');
+            console.log((xhr.loaded / xhr.total * 100) + '% loaded');
           }, (e) => {
             console.error('啊出错了', e)
           }

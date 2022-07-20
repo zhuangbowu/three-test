@@ -16,7 +16,22 @@ function Throttle(fn, delay = 200) {
 function getRandomNum(m, n) {
     return Math.floor(Math.random() * (m - n) + n);
 }
+function setName() {
+    const KEY_LEN=10;
+    const KEY_COUNT=20;
+    const CHARS='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let arr=[];
+    for(let i=0;i<KEY_COUNT;i++){
+        let key='';
+        for(let j=0;j<KEY_LEN;j++){
+            key+=CHARS[Math.floor(Math.random()*CHARS.length)];
+        }
+        arr.push(key);
+    }
+    return arr.join('').toString();
+}
 export default {
     Throttle,
-    getRandomNum
+    getRandomNum,
+    setName
 };
