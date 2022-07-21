@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>按照顺序递增/一行可以存在多个</title>
+    <style>
+        .box {
+            border: 1px solid red;
+            position: relative;
+        }
+
+        div {
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+<div class="box">
+
+</div>
+</body>
+</html>
+<script src="../js/config.js"></script>
+<script>
+    let arr = [
+        {
+            index: '1',
+            name: '1'
+        },
+        {
+            index: '2-1',
+            name: '2-1'
+        },
+        {
+            index: '2-2',
+            name: '2-2'
+        },
+        {
+            index: '3',
+            name: '3'
+        },
+        {
+            index: '4-1',
+            name: '4-1'
+        },
+        {
+            index: '4-2',
+            name: '4-2'
+        },
+        {
+            index: '4-3',
+            name: '4-3'
+        },
+        {
+            index: '5',
+            name: '5'
+        },
+        {
+            index: '6',
+            name: '6'
+        },
+        {
+            index: '7',
+            name: '7'
+        },
+        {
+            index: '8-1',
+            name: '8-1'
+        },
+        {
+            index: '8-2',
+            name: '8-2'
+        },
+    ];
+
+    let list = [];
+    for (let i = 0; i < arr.length; i++) {
+        let column = arr[i].index.split('-');
+        if (column.length === 1) {
+            list.push(arr[i]);
+        } else {
+            let front = parseInt(column[0]) - 1, after = parseInt(column[1]) - 1;
+            if (!list[front]) {
+                list.push({});
+            }
+            if (!list[front].column) {
+                list[front].column = [];
+            }
+            list[front].column[after] = arr[i];
+        }
+    }
+    let meshSize = {
+        width: 316,
+        height: 300,
+    }
+    let sonMeshSize = {
+        width: 40,
+        height: 280,
+    }
+    let box = document.querySelector('.box');
+    box.style.width = `${meshSize.width}px`;
+    box.style.height = `${meshSize.height}px`;
+    // 乱七八糟的小东西测试 计算
+    for (let i = 0; i < list.length; i++) {
+        console.log(list[i])
+        if (list[i].column) {
+            let sizeData = {
+                width: sonMeshSize.width,
+                height: sonMeshSize.height,
+                maxNum: list[i].column.length,
+                padding: {
+                    top: 2,
+                    right: 2,
+                    bottom: 2,
+                    left: 2,
+                },
+                type: 2,
+            }
+            let size = calculationSize(sizeData);
+            console.log(size);
+            for (let j = 0; j < list[i].column.length; j++) {
+                // let itemElement = addElement(sonMeshSize.width, sonMeshSize.height);
+            }
+        } else {
+            let itemElement = addElement(sonMeshSize.width, sonMeshSize.height);
+            let calculation = {
+                size: meshSize,
+                sonSize: sonMeshSize,
+                index: i,
+                type: 1,
+            }
+            let position = calculationPosition(calculation);
+            itemElement.style.left = `${position.x}px`;
+            itemElement.style.top = `${position.y}px`;
+            box.appendChild(itemElement);
+        }
+    }
+
+
+</script>

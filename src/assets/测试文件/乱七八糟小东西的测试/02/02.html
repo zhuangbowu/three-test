@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>如果超出最大长度那么进行换行,超出最大可显示数量不渲染</title>
+    <style>
+        .box {
+            border: 1px solid red;
+            position: relative;
+        }
+
+        div {
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+<div class="box">
+
+</div>
+</body>
+</html>
+<script src="../js/config.js"></script>
+<script>
+    let meshSize = {
+        width: 324,
+        height: 300,
+    }
+    let sonMeshSize = {
+        width: 10,
+        height: 5,
+    }
+    let box = document.querySelector('.box');
+    box.style.width = `${meshSize.width}px`;
+    box.style.height = `${meshSize.height}px`;
+    let changeNum = Math.floor((meshSize.width - 12) / (sonMeshSize.width + 6));
+    // 乱七八糟的小东西测试 计算
+    for (let i = 0; i < 200; i++) {
+        let itemElement = document.createElement('div');
+        itemElement.style.position = 'absolute';
+        itemElement.style.left = '';
+        itemElement.style.width = `${sonMeshSize.width}px`;
+        itemElement.style.height = `${sonMeshSize.height}px`;
+        itemElement.style.border = '1px solid green';
+        let calculation = {
+            size: meshSize,
+            sonSize: sonMeshSize,
+            index: i,
+            type: 1,
+            change: true
+        }
+        let position = calculationPosition(calculation);
+        console.log(position)
+        itemElement.style.left = `${position.x}px`;
+        itemElement.style.top = `${position.y}px`;
+        box.appendChild(itemElement);
+    }
+</script>
