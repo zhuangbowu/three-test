@@ -5,13 +5,14 @@
     <title>按照顺序递增</title>
     <style>
         .box {
-            border: 1px solid red;
+            background-color: red;
+            opacity: 0.5;
             position: relative;
         }
 
-        div {
-            box-sizing: border-box;
-        }
+        /*div {*/
+        /*    box-sizing: border-box;*/
+        /*}*/
     </style>
 </head>
 <body>
@@ -22,45 +23,34 @@
 </html>
 <script src="../js/config.js"></script>
 <script>
-
-    let meshSize = {
-        width: 324,
-        height: 310,
-    }
-    let sonMeshSize = {
-        width: 280,
-        height: 20,
+    let size = {
+        width: 500,
+        height: 500,
     }
     let box = document.querySelector('.box');
-    box.style.width = `${meshSize.width}px`;
-    box.style.height = `${meshSize.height}px`;
+    box.style.width = `${size.width}px`;
+    box.style.height = `${size.height}px`;
     // 乱七八糟的小东西测试 计算
-    for (let i = 0; i < 20; i++) {
-        let itemElement = document.createElement('div');
-        itemElement.style.position = 'absolute';
-        itemElement.style.left = '';
-        itemElement.style.width = `${sonMeshSize.width}px`;
-        itemElement.style.height = `${sonMeshSize.height}px`;
-        itemElement.style.border = '1px solid green';
-        // itemElement
-        // if (i === 0) {
-        //     itemElement.style.left = `4px`;
-        // } else {
-        //     itemElement.style.left = `${i * sonMeshSize.width + i * 6}px`;
-        // }
-        // console.log(i * sonMeshSize.width + i * 6)
-
-        let calculation = {
-            size: meshSize,
-            sonSize: sonMeshSize,
-            index: i,
-            type: 2,
-            change: true
-        }
-        let position = calculationPosition(calculation);
-        console.log(position)
-        itemElement.style.left = `${position.x}px`;
-        itemElement.style.top = `${position.y}px`;
+    let posiClass = new calculationPositionSize({
+        width: size.width,
+        height: size.height,
+        padding: {
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+        },
+        numMax: 12,
+        spacing: 12,
+        type: 1,
+        change: false
+    });
+    let sonSize = posiClass.getSize(12);
+    for (let i = 0; i < 12; i++) {
+        let itemElement = addElement(sonSize.width, sonSize.height);
+        let posi = posiClass.getPosition(i);
+        itemElement.style.left = `${posi.x}px`;
+        itemElement.style.top = `${posi.y}px`;
         box.appendChild(itemElement);
     }
 

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>存在子容器的情况</title>
+    <style>
+        .box {
+            border: 1px solid red;
+            position: relative;
+        }
+
+        div {
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+<div class="box">
+
+</div>
+</body>
+</html>
+<script src="../js/config.js"></script>
+<script>
+    let arr = [
+        {
+            index: '1',
+            name: '1',
+            children: [
+                {
+                    index: '1',
+                    name: '1',
+                },
+                {
+                    index: '2',
+                    name: '2',
+                },
+                {
+                    index: '3',
+                    name: '3',
+                },
+            ]
+        },
+        {
+            index: '2',
+            name: '2'
+        },
+        {
+            index: '3',
+            name: '3',
+            children: [
+                {
+                    index: '1',
+                    name: '1',
+                },
+                {
+                    index: '2',
+                    name: '2',
+                },
+            ]
+        },
+        {
+            index: '4',
+            name: '4'
+        },
+        {
+            index: '5',
+            name: '5'
+        },
+        {
+            index: '6',
+            name: '6'
+        },
+        {
+            index: '7',
+            name: '7'
+        },
+        {
+            index: '8',
+            name: '8',
+            children: [
+                {
+                    index: '1',
+                    name: '1',
+                },
+                {
+                    index: '2',
+                    name: '2',
+                },
+            ]
+        },
+    ];
+
+
+    let meshSize = {
+        width: 524,
+        height: 300,
+    }
+    let sonMeshSize = {
+        width: 200,
+        height: 80,
+    }
+    let box = document.querySelector('.box');
+    box.style.width = `${meshSize.width}px`;
+    box.style.height = `${meshSize.height}px`;
+    // 乱七八糟的小东西测试 计算
+    for (let i = 0; i < arr.length; i++) {
+        if (arr[i]) {
+            let itemElement = document.createElement('div');
+            itemElement.style.position = 'absolute';
+            itemElement.style.left = '';
+            itemElement.style.width = `${sonMeshSize.width}px`;
+            itemElement.style.height = `${sonMeshSize.height}px`;
+            itemElement.style.border = '1px solid green';
+            let calculation = {
+                size: meshSize,
+                sonSize: sonMeshSize,
+                index: i,
+                type: 2,
+            }
+            let position = calculationPosition(calculation);
+            console.log(position)
+            itemElement.style.left = `${position.x}px`;
+            itemElement.style.top = `${position.y}px`;
+            box.appendChild(itemElement);
+
+            if (arr[i].children) {
+                let padding = {
+                    top: 6,
+                    bottom: 6,
+                    left: 6,
+                    right: 6,
+                }, type = 1;
+                let sizeData = {
+                    width: sonMeshSize.width,
+                    height: sonMeshSize.height,
+                    maxNum: arr[i].children.length,
+                    padding,
+                    type
+                }
+                let size = calculationSize(sizeData);
+                for (let j = 0; j < arr[i].children.length; j++) {
+                    if (arr[i].children[j]) {
+                        let columnElement = addElement(size.width, size.height);
+                        let calculation = {
+                            size: sonMeshSize,
+                            sonSize: size,
+                            index: j,
+                            padding,
+                            type
+                        }
+                        let position = calculationPosition(calculation);
+                        columnElement.style.left = `${position.x}px`;
+                        columnElement.style.top = `${position.y}px`;
+                        itemElement.appendChild(columnElement);
+                    }
+                }
+
+            }
+        }
+    }
+
+</script>

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>一列多个然后里面你都存在子容器</title>
+    <style>
+        .box {
+            border: 1px solid red;
+            position: relative;
+        }
+
+        div {
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+<div class="box">
+
+</div>
+</body>
+</html>
+<script src="../js/config.js"></script>
+<script>
+    let arr = [
+        {
+            index: '1',
+            name: '1',
+            children: [
+                {
+                    index: '1',
+                    name: '1',
+                },
+                {
+                    index: '2',
+                    name: '2',
+                },
+                {
+                    index: '3',
+                    name: '3',
+                },
+            ]
+        },
+        {
+            index: '2-1',
+            name: '2-1'
+        },
+        {
+            index: '2-2',
+            name: '2-2'
+        },
+        {
+            index: '3',
+            name: '3',
+            children: [
+                {
+                    index: '1',
+                    name: '1',
+                },
+                {
+                    index: '2',
+                    name: '2',
+                },
+            ]
+        },
+        {
+            index: '4',
+            name: '4'
+        },
+        {
+            index: '5-1',
+            name: '5-1',
+            children: [
+                {
+                    index: '1',
+                    name: '1',
+                },
+                {
+                    index: '2',
+                    name: '2',
+                },
+            ]
+        },
+        {
+            index: '5-2',
+            name: '5-2',
+            children: [
+                {
+                    index: '1',
+                    name: '1',
+                },
+                {
+                    index: '2',
+                    name: '2',
+                },
+            ]
+        },
+        {
+            index: '6',
+            name: '6'
+        },
+        {
+            index: '7',
+            name: '7'
+        },
+        {
+            index: '8',
+            name: '8',
+            children: [
+                {
+                    index: '1',
+                    name: '1',
+                },
+                {
+                    index: '2',
+                    name: '2',
+                },
+            ]
+        },
+    ];
+    let list = setData(arr);
+
+    let meshSize = {
+        width: 696,
+        height: 212,
+    }
+    let sonMeshSize = {
+        width: 80,
+        height: 200,
+    }
+    let box = document.querySelector('.box');
+    box.style.width = `${meshSize.width}px`;
+    box.style.height = `${meshSize.height}px`;
+    // 乱七八糟的小东西测试 计算
+    for (let i = 0; i < list.length; i++) {
+        if (list[i]) {
+            if (list[i].column) {
+                let itemElement = addBox(sonMeshSize.width, sonMeshSize.height);
+                let calculation = {
+                    size: meshSize,
+                    sonSize: sonMeshSize,
+                    index: i,
+                    type: 1,
+                }
+                let position = calculationPosition(calculation);
+                itemElement.style.left = `${position.x}px`;
+                itemElement.style.top = `${position.y}px`;
+                box.appendChild(itemElement);
+                let columnSizeData = {
+                    width: sonMeshSize.width,
+                    height: sonMeshSize.height,
+                    maxNum: list[i].column.length,
+                    padding: {
+                        top: 0,
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                    },
+                    type: 2,
+                }
+                let columnSize = calculationSize(columnSizeData);
+                for (let j = 0; j < list[i].column.length; j++) {
+                    let columnElement = addElement(columnSize.width, columnSize.height);
+                    let calculation = {
+                        size: sonMeshSize,
+                        sonSize: columnSize,
+                        index: j,
+                        padding: {
+                            top: 0,
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                        },
+                        type: 2,
+                    }
+                    let position = calculationPosition(calculation);
+                    columnElement.style.left = `${position.x}px`;
+                    columnElement.style.top = `${position.y}px`;
+                    itemElement.appendChild(columnElement);
+
+                    if (list[i].column[j].children) {
+                        let padding = {
+                            top: 6,
+                            bottom: 6,
+                            left: 6,
+                            right: 6,
+                        }
+                        let childrenSizeData = {
+                            width: columnSize.width,
+                            height: columnSize.height,
+                            maxNum: list[i].column[j].children.length,
+                            padding,
+                            type: 2,
+                        }
+                        let childrenSize = calculationSize(childrenSizeData);
+                        for (let k = 0; k < list[i].column[j].children.length; k++) {
+                            if (list[i].column[j].children[k]) {
+                                let childrenElement = addElement(childrenSize.width, childrenSize.height);
+                                let calculation = {
+                                    size: columnSize,
+                                    sonSize: childrenSize,
+                                    index: k,
+                                    padding,
+                                    type: 2,
+                                }
+                                let position = calculationPosition(calculation);
+                                childrenElement.style.left = `${position.x}px`;
+                                childrenElement.style.top = `${position.y}px`;
+                                columnElement.appendChild(childrenElement);
+                            }
+                        }
+                    }
+                    // let itemElement = addElement(sonMeshSize.width, sonMeshSize.height);
+                }
+            } else {
+                let itemElement = document.createElement('div');
+                itemElement.style.position = 'absolute';
+                itemElement.style.left = '';
+                itemElement.style.width = `${sonMeshSize.width}px`;
+                itemElement.style.height = `${sonMeshSize.height}px`;
+                itemElement.style.border = '1px solid green';
+                let calculation = {
+                    size: meshSize,
+                    sonSize: sonMeshSize,
+                    index: i,
+                    type: 1,
+                }
+                let position = calculationPosition(calculation);
+                itemElement.style.left = `${position.x}px`;
+                itemElement.style.top = `${position.y}px`;
+                box.appendChild(itemElement);
+                if (list[i].children) {
+                    let padding = {
+                        top: 6,
+                        bottom: 6,
+                        left: 6,
+                        right: 6,
+                    }
+                    let sizeData = {
+                        width: sonMeshSize.width,
+                        height: sonMeshSize.height,
+                        maxNum: list[i].children.length,
+                        padding,
+                        type: 2,
+                    }
+                    let size = calculationSize(sizeData);
+                    for (let j = 0; j < list[i].children.length; j++) {
+                        if (list[i].children[j]) {
+                            let childrenElement = addElement(size.width, size.height);
+                            let calculation = {
+                                size: sonMeshSize,
+                                sonSize: size,
+                                index: j,
+                                padding,
+                                type: 2,
+                            }
+                            let position = calculationPosition(calculation);
+                            childrenElement.style.left = `${position.x}px`;
+                            childrenElement.style.top = `${position.y}px`;
+                            itemElement.appendChild(childrenElement);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+</script>
