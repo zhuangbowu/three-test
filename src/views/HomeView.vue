@@ -42,7 +42,7 @@ let renderer = null;
 // 控制器对象
 let controls = null;
 // 添加性能检测器
-let stats = addStats()
+// let stats = addStats()
 
 
 function Throttle(fn, delay = 200) {

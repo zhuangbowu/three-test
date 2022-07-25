@@ -4,19 +4,18 @@
       <el-main>
         <!-- 3D模型容器 -->
         <div id="container"></div>
-
       </el-main>
       <el-aside width="400px">
         <!-- 编辑区域 -->
         <div class="edit">
           <el-form ref="form" :model="mesh" label-width="120px">
-            <el-form-item label="机框尺寸(宽高长)">
+            <el-form-item label="机框尺寸(宽高深)">
               <el-input type="text" min="1" v-model="mesh.size" aria-placeholder="填写数字中间以逗号隔开"></el-input>
             </el-form-item>
             <!--            <el-form-item label="槽位列数">-->
             <!--              <el-input type="number" min="1" v-model="mesh.slotNum"></el-input>-->
             <!--            </el-form-item>-->
-            <!--            <el-form-item label="槽位尺寸(宽高长)">-->
+            <!--            <el-form-item label="槽位尺寸(宽高深)">-->
             <!--              <el-input type="text" min="1" v-model="mesh.slotSize" placeholder="填写数字中间以逗号隔开"></el-input>-->
             <!--            </el-form-item>-->
             <el-form-item label="排列规则">
@@ -273,7 +272,7 @@ export default {
             let parameters = {
               color: colorArr2[utils.getRandomNum(0, 3)]
             }
-            let sonMesh2 = this.addRectangle(sonMeshSize[2]-3, ((sonMeshSize[1] - 9) / this.mesh.slotList[i].children.length), sonMeshSize[0] , parameters, sonMesh);
+            let sonMesh2 = this.addRectangle(sonMeshSize[2] - 3, ((sonMeshSize[1] - 9) / this.mesh.slotList[i].children.length), sonMeshSize[0], parameters, sonMesh);
             sonMesh2.position.set(1.5, -(j * ((sonMeshSize[1] / this.mesh.slotList[i].children.length)) + 3), 5);
           }
         }
@@ -282,20 +281,6 @@ export default {
       // camera.lookAt(scene.position); //设置相机方向(指向的场景对象)
       // camera.trace.x
       this.render();
-    },
-    /**
-     * meshSize 父级的宽高
-     * sonMeshSize 当前元素的宽高
-     * index 当前元素的位置
-     * num 当前元素同级的数量
-     * type 1是横向 2是竖向 默认等于1
-     * */
-    calculationPosition(meshSize, sonMeshSize, index, num, type = 1) {
-      /**
-       * 如果type = 1 那就是修改x的值
-       * 如果type = 2 那就是修改y的值
-       * x * index + 3
-       * */
     },
     // 创建几何体
     addRectangle(width, height, depth, parameters, parent) {

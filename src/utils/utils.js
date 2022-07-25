@@ -30,8 +30,166 @@ function setName() {
     }
     return arr.join('').toString();
 }
+let formatArray = (arr)=> {
+    let list = [];
+    for (let i = 0; i < arr.length; i++) {
+        let column = arr[i].index.split('-');
+        if (column.length === 1) {
+            let index = parseInt(column[0]) - 1;
+            list[index] = arr[i];
+        } else {
+            let front = parseInt(column[0]) - 1, after = parseInt(column[1]) - 1;
+            if (!list[front]) {
+                list.push({});
+            }
+            if (!list[front].column) {
+                list[front].column = [];
+            }
+            list[front].column[after] = arr[i];
+        }
+    }
+    return list;
+}
+/**
+ * 获取其中每个模型的大小和坐标的通用class类
+ * width,height 父级的宽高
+ * spacing 两个元素之间的距离（默认6）
+ * padding 父元素与子元素的之间的内间距（默认6）
+ * type 1是横向 2是竖向 默认等于1
+ * change 超出是否换行（默认不换行）
+ * */
+class calculationPositionSize {
+    constructor(data) {
+        data = {
+            width: data.width,
+            height: data.height,
+            padding: data.padding || {
+                top: 6,
+                bottom: 6,
+                left: 6,
+                right: 6,
+            },
+            numMax: data.numMax || 12,
+            spacing: data.spacing || 6,
+            type: data.type,
+            change: data.change
+        }
+        this.width = data.width;
+        this.height = data.height;
+        this.padding = data.padding;
+        this.numMax = data.numMax;
+        this.spacing = data.spacing;
+        this.type = data.type;
+        this.change = data.change;
+        this.currentWidth = undefined;
+        this.currentHeight = undefined;
+    }
+
+    // 获取位置
+    getPosition(index) {
+        try {
+            let changeNum, leftIndex, topIndex, position = {};
+            switch (this.type) {
+                case 1:
+                case '1':
+                    changeNum = Math.floor((this.width - (this.padding.left + this.padding.right) - ((this.numMax * this.spacing) - this.spacing)) / this.currentWidth);
+                    leftIndex = index % changeNum;
+                    topIndex = Math.floor(index / changeNum);
+                    break;
+                case 2:
+                case '2':
+                    changeNum = Math.floor((this.height - (this.padding.top + this.padding.bottom) - ((this.numMax * this.spacing) - this.spacing)) / this.currentHeight);
+                    leftIndex = Math.floor(index / changeNum);
+                    topIndex = index % changeNum;
+                    break;
+            }
+            switch (this.change) {
+                case true:
+                    if (leftIndex === 0) {
+                        position.x = this.padding.left;
+                    } else {
+                        position.x = this.#calculation(leftIndex, this.currentWidth, this.spacing, this.padding.left);
+                    }
+                    if (topIndex === 0) {
+                        position.y = this.padding.top;
+                    } else {
+                        position.y = this.#calculation(topIndex, this.currentHeight, this.spacing, this.padding.top);
+                    }
+                    break;
+                default:
+                    switch (this.type) {
+                        case 1:
+                        case '1':
+                            position.y = this.padding.top;
+                            if (index === 0) {
+                                position.x = this.padding.left;
+                            } else {
+                                position.x = this.#calculation(index, this.currentWidth, this.spacing, this.padding.left);
+                            }
+                            break;
+                        case 2:
+                        case '2':
+                            position.x = this.padding.left;
+                            if (index === 0) {
+                                position.y = this.padding.top;
+                            } else {
+                                position.y = this.#calculation(index, this.currentHeight, this.spacing, this.padding.top);
+                            }
+                            break;
+                    }
+                    break;
+            }
+            return position;
+        } catch (e) {
+            throw Error(e);
+        }
+    }
+
+    // 获取大小
+    getSize() {
+        try {
+            let size = {
+                width: 0,
+                height: 0,
+            }
+            switch (this.type) {
+                case 1:
+                case '1':
+                    size.width = (this.width - this.padding.left - this.padding.right - ((this.numMax * this.spacing) - this.spacing)) / this.numMax;
+                    size.height = this.height - this.padding.top - this.padding.bottom;
+                    break;
+                case 2:
+                case '2':
+                    size.width = this.width - this.padding.left - this.padding.right;
+                    size.height = (this.height - this.padding.top - this.padding.bottom - ((this.numMax * this.spacing) - this.spacing)) / this.numMax;
+                    break;
+            }
+            if (size.width < 1) {
+                size.width = 1;
+            }
+            if (size.height < 1) {
+                size.height = 1;
+            }
+
+            this.currentWidth = size.width;
+            this.currentHeight = size.height;
+            return size;
+        } catch (e) {
+            throw Error(e);
+        }
+    }
+
+    #calculation = (index, size, spacing, padding) => {
+        // 当前坐标*宽/高+当前坐标*行间距+内边距=当前x/y轴的数值
+        return (index * size + index * spacing) + padding;
+    }
+}
+
+
 export default {
     Throttle,
     getRandomNum,
-    setName
+    setName,
+    calculationPositionSize,
+    formatArray
 };

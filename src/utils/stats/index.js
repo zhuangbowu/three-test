@@ -4,6 +4,7 @@ import * as Stats from './stats.js'
 // addStats()方式生成标签
 // 3d重新渲染的时候调用stats.update()方法生成新的
 let addStats = () => {
+    console.log(22222222222222)
     let stats = new Stats()
     stats.showPanel(0) // 0: fps, 1: ms, 2: mb, 3+: custom
     stats.domElement.style.position = 'fixed'; //相对定位

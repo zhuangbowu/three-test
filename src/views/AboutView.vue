@@ -1,5 +1,6 @@
 <template>
   <div class="about">
+    <el-button @click="setPosition">移动最外层盒子</el-button>
     <!-- 3D模型容器 -->
     <div id="container"></div>
   </div>
@@ -30,6 +31,15 @@ export default {
     this.init();
   },
   methods: {
+    setPosition() {
+      scene.children.forEach(item => {
+        if (item.isMesh) {
+          item.position.set(20, 0, 0);
+          this.render();
+          console.log(item)
+        }
+      })
+    },
     init() {
       let container = document.querySelector('#container');
       scene = new THREE.Scene();
@@ -62,7 +72,19 @@ export default {
         color: 0x00ff00
       }); //材质对象Material
       let mesh = new THREE.Mesh(geometry, material); //网格模型对象Mesh
+      mesh.position.set(100, 100, 100)
       scene.add(mesh); //网格模型添加到场景中
+      let geometry2 = new THREE.BoxGeometry(50, 50, 50); //创建一个立方体几何对象Geometry
+      let material2 = new THREE.MeshLambertMaterial({
+        color: 0xff0000
+      }); //材质对象Material
+      let mesh2 = new THREE.Mesh(geometry2, material2); //网格模型对象Mesh
+      this.$nextTick(()=>{
+        mesh2.position.set(20, 20, 20)
+      })
+      mesh.attach(mesh2); //网格模型添加到场景中
+
+
       this.render();
       camera.lookAt(scene.position); //设置相机方向(指向的场景对象)
       this.render();
@@ -93,7 +115,7 @@ export default {
       controls.addEventListener('change', this.render);//监听鼠标、键盘事件
     },
 
-    render(){
+    render() {
       renderer.render(scene, camera);
     },
   }
