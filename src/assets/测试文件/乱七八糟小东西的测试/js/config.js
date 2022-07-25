@@ -145,14 +145,14 @@ let addElement = (width, height) => {
     itemElement.style.left = '';
     itemElement.style.width = `${width}px`;
     itemElement.style.height = `${height}px`;
-    // itemElement.style.border = '1px solid green';
-    itemElement.style.backgroundColor = 'green';
+    itemElement.style.border = '1px solid green';
+    // itemElement.style.backgroundColor = 'green';
     return itemElement;
 }
 /**
  * 动态创建盒子
  * */
-let addBox = (width, height) => {
+let addElementBox = (width, height) => {
     let itemElement = document.createElement('div');
     itemElement.style.position = 'absolute';
     itemElement.style.left = '';
@@ -191,18 +191,13 @@ let setData = (arr) => {
 
 /**
  * 获取其中每个模型的大小和坐标的通用class类
- *
+ * width,height 父级的宽高
+ * spacing 两个元素之间的距离（默认6）
+ * padding 父元素与子元素的之间的内间距（默认6）
+ * type 1是横向 2是竖向 默认等于1
+ * change 超出是否换行（默认不换行）
  * */
-
-
 class calculationPositionSize {
-    /*
-     * width,height 父级的宽高
-     * spacing 两个元素之间的距离（默认6）
-     * padding 父元素与子元素的之间的内间距（默认6）
-     * type 1是横向 2是竖向 默认等于1
-     * change 超出是否换行（默认不换行）
-     * */
     constructor(data) {
         data = {
             width: data.width,
@@ -326,5 +321,33 @@ class calculationPositionSize {
     #calculation = (index, size, spacing, padding) => {
         // 当前坐标*宽/高+当前坐标*行间距+内边距=当前x/y轴的数值
         return (index * size + index * spacing) + padding;
+    }
+}
+
+
+let addChildrenElement = (children,size,itemElement) => {
+    if (children) {
+        let childrenClass = new calculationPositionSize({
+            width: size.width,
+            height: size.height,
+            padding: {
+                top: 4,
+                bottom: 4,
+                left: 4,
+                right: 4,
+            },
+            numMax: children.length,
+            spacing: 4,
+            type: 1,
+            change: false
+        });
+        let childrenSize = childrenClass.getSize();
+        for (let j = 0; j < children.length; j++) {
+            let childrenElement = addElement(childrenSize.width, childrenSize.height);
+            let childrenPosition = childrenClass.getPosition(j);
+            childrenElement.style.left = `${childrenPosition.x}px`;
+            childrenElement.style.top = `${childrenPosition.y}px`;
+            itemElement.appendChild(childrenElement);
+        }
     }
 }

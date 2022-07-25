@@ -79,78 +79,68 @@
 
     let list = setData(arr);
 
-    let meshSize = {
-        width: 316,
-        height: 300,
+    let size = {
+        width: 500,
+        height: 600,
     }
-    let sonMeshSize = {
-        width: 40,
-        height: 280,
-    }
+
     let box = document.querySelector('.box');
-    box.style.width = `${meshSize.width}px`;
-    box.style.height = `${meshSize.height}px`;
+    box.style.width = `${size.width}px`;
+    box.style.height = `${size.height}px`;
+
+
+    let boxClass = new calculationPositionSize({
+        width: size.width,
+        height: size.height,
+        padding: {
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+        },
+        numMax: list.length,
+        spacing: 6,
+        type: 2,
+        change: false
+    });
+    let sonSize = boxClass.getSize();
     // 乱七八糟的小东西测试 计算
     for (let i = 0; i < list.length; i++) {
         if (list[i]) {
+            let itemElement;
             if (list[i].column) {
-                let itemElement = addBox(sonMeshSize.width, sonMeshSize.height);
-                let calculation = {
-                    size: meshSize,
-                    sonSize: sonMeshSize,
-                    index: i,
-                    type: 1,
-                }
-                let position = calculationPosition(calculation);
-                itemElement.style.left = `${position.x}px`;
-                itemElement.style.top = `${position.y}px`;
-                box.appendChild(itemElement);
+                itemElement = addElementBox(sonSize.width, sonSize.height);
+            } else {
+                itemElement = addElement(sonSize.width, sonSize.height);
+            }
+            let posi = boxClass.getPosition(i);
+            itemElement.style.left = `${posi.x}px`;
+            itemElement.style.top = `${posi.y}px`;
+            box.appendChild(itemElement);
 
-                let sizeData = {
-                    width: sonMeshSize.width,
-                    height: sonMeshSize.height,
-                    maxNum: list[i].column.length,
+            if (list[i].column) {
+                let columnClass = new calculationPositionSize({
+                    width: sonSize.width,
+                    height: sonSize.height,
                     padding: {
                         top: 0,
                         bottom: 0,
                         left: 0,
                         right: 0,
                     },
-                    type: 2,
-                }
-                let size = calculationSize(sizeData);
-                for (let j = 0; j < list[i].column.length; j++) {
-                    let columnElement = addElement(size.width, size.height);
-                    let calculation = {
-                        size: sonMeshSize,
-                        sonSize: size,
-                        index: j,
-                        padding: {
-                            top: 0,
-                            bottom: 0,
-                            left: 0,
-                            right: 0,
-                        },
-                        type: 2,
-                    }
-                    let position = calculationPosition(calculation);
-                    columnElement.style.left = `${position.x}px`;
-                    columnElement.style.top = `${position.y}px`;
-                    itemElement.appendChild(columnElement);
-                    // let itemElement = addElement(sonMeshSize.width, sonMeshSize.height);
-                }
-            } else {
-                let itemElement = addElement(sonMeshSize.width, sonMeshSize.height);
-                let calculation = {
-                    size: meshSize,
-                    sonSize: sonMeshSize,
-                    index: i,
+                    numMax: list[i].column.length,
+                    spacing: 4,
                     type: 1,
+                    change: false
+                });
+                let columnSize = columnClass.getSize();
+                for (let j = 0; j < list[i].column.length; j++) {
+                    let columnElement = addElement(columnSize.width, columnSize.height);
+                    let columnPosition = columnClass.getPosition(j);
+                    columnElement.style.left = `${columnPosition.x}px`;
+                    columnElement.style.top = `${columnPosition.y}px`;
+                    itemElement.appendChild(columnElement);
                 }
-                let position = calculationPosition(calculation);
-                itemElement.style.left = `${position.x}px`;
-                itemElement.style.top = `${position.y}px`;
-                box.appendChild(itemElement);
             }
         }
     }

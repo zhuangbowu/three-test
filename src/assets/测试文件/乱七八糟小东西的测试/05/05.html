@@ -120,147 +120,70 @@
     ];
     let list = setData(arr);
 
-    let meshSize = {
-        width: 696,
-        height: 212,
-    }
-    let sonMeshSize = {
-        width: 80,
-        height: 200,
+    let size = {
+        width: 396,
+        height: 600,
     }
     let box = document.querySelector('.box');
-    box.style.width = `${meshSize.width}px`;
-    box.style.height = `${meshSize.height}px`;
-    // 乱七八糟的小东西测试 计算
+    box.style.width = `${size.width}px`;
+    box.style.height = `${size.height}px`;
+    let boxClass = new calculationPositionSize({
+        width: size.width,
+        height: size.height,
+        padding: {
+            top: 4,
+            bottom: 4,
+            left: 4,
+            right: 4,
+        },
+        numMax: list.length,
+        spacing: 6,
+        type: 2,
+        change: false
+    });
+    let sonSize = boxClass.getSize();
     for (let i = 0; i < list.length; i++) {
         if (list[i]) {
+            let itemElement;
             if (list[i].column) {
-                let itemElement = addBox(sonMeshSize.width, sonMeshSize.height);
-                let calculation = {
-                    size: meshSize,
-                    sonSize: sonMeshSize,
-                    index: i,
-                    type: 1,
-                }
-                let position = calculationPosition(calculation);
-                itemElement.style.left = `${position.x}px`;
-                itemElement.style.top = `${position.y}px`;
-                box.appendChild(itemElement);
-                let columnSizeData = {
-                    width: sonMeshSize.width,
-                    height: sonMeshSize.height,
-                    maxNum: list[i].column.length,
+                itemElement = addElementBox(sonSize.width, sonSize.height);
+            } else {
+                itemElement = addElement(sonSize.width, sonSize.height);
+            }
+            let columnPosition = boxClass.getPosition(i);
+            itemElement.style.left = `${columnPosition.x}px`;
+            itemElement.style.top = `${columnPosition.y}px`;
+            box.appendChild(itemElement);
+            if (list[i].column) {
+                let columnClass = new calculationPositionSize({
+                    width: sonSize.width,
+                    height: sonSize.height,
                     padding: {
                         top: 0,
                         bottom: 0,
                         left: 0,
                         right: 0,
                     },
-                    type: 2,
-                }
-                let columnSize = calculationSize(columnSizeData);
+                    numMax: list[i].column.length,
+                    spacing: 4,
+                    type: 1,
+                    change: false
+                });
+                let columnSize = columnClass.getSize();
                 for (let j = 0; j < list[i].column.length; j++) {
                     let columnElement = addElement(columnSize.width, columnSize.height);
-                    let calculation = {
-                        size: sonMeshSize,
-                        sonSize: columnSize,
-                        index: j,
-                        padding: {
-                            top: 0,
-                            bottom: 0,
-                            left: 0,
-                            right: 0,
-                        },
-                        type: 2,
-                    }
-                    let position = calculationPosition(calculation);
-                    columnElement.style.left = `${position.x}px`;
-                    columnElement.style.top = `${position.y}px`;
+                    let columnPosition = columnClass.getPosition(j);
+                    columnElement.style.left = `${columnPosition.x}px`;
+                    columnElement.style.top = `${columnPosition.y}px`;
                     itemElement.appendChild(columnElement);
 
                     if (list[i].column[j].children) {
-                        let padding = {
-                            top: 6,
-                            bottom: 6,
-                            left: 6,
-                            right: 6,
-                        }
-                        let childrenSizeData = {
-                            width: columnSize.width,
-                            height: columnSize.height,
-                            maxNum: list[i].column[j].children.length,
-                            padding,
-                            type: 2,
-                        }
-                        let childrenSize = calculationSize(childrenSizeData);
-                        for (let k = 0; k < list[i].column[j].children.length; k++) {
-                            if (list[i].column[j].children[k]) {
-                                let childrenElement = addElement(childrenSize.width, childrenSize.height);
-                                let calculation = {
-                                    size: columnSize,
-                                    sonSize: childrenSize,
-                                    index: k,
-                                    padding,
-                                    type: 2,
-                                }
-                                let position = calculationPosition(calculation);
-                                childrenElement.style.left = `${position.x}px`;
-                                childrenElement.style.top = `${position.y}px`;
-                                columnElement.appendChild(childrenElement);
-                            }
-                        }
-                    }
-                    // let itemElement = addElement(sonMeshSize.width, sonMeshSize.height);
-                }
-            } else {
-                let itemElement = document.createElement('div');
-                itemElement.style.position = 'absolute';
-                itemElement.style.left = '';
-                itemElement.style.width = `${sonMeshSize.width}px`;
-                itemElement.style.height = `${sonMeshSize.height}px`;
-                itemElement.style.border = '1px solid green';
-                let calculation = {
-                    size: meshSize,
-                    sonSize: sonMeshSize,
-                    index: i,
-                    type: 1,
-                }
-                let position = calculationPosition(calculation);
-                itemElement.style.left = `${position.x}px`;
-                itemElement.style.top = `${position.y}px`;
-                box.appendChild(itemElement);
-                if (list[i].children) {
-                    let padding = {
-                        top: 6,
-                        bottom: 6,
-                        left: 6,
-                        right: 6,
-                    }
-                    let sizeData = {
-                        width: sonMeshSize.width,
-                        height: sonMeshSize.height,
-                        maxNum: list[i].children.length,
-                        padding,
-                        type: 2,
-                    }
-                    let size = calculationSize(sizeData);
-                    for (let j = 0; j < list[i].children.length; j++) {
-                        if (list[i].children[j]) {
-                            let childrenElement = addElement(size.width, size.height);
-                            let calculation = {
-                                size: sonMeshSize,
-                                sonSize: size,
-                                index: j,
-                                padding,
-                                type: 2,
-                            }
-                            let position = calculationPosition(calculation);
-                            childrenElement.style.left = `${position.x}px`;
-                            childrenElement.style.top = `${position.y}px`;
-                            itemElement.appendChild(childrenElement);
-                        }
+                        addChildrenElement(list[i].column[j].children, columnSize, columnElement);
                     }
                 }
+            }
+            if (list[i].children) {
+                addChildrenElement(list[i].children, sonSize, itemElement);
             }
         }
     }

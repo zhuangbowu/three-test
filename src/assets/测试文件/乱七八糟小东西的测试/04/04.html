@@ -90,72 +90,60 @@
             ]
         },
     ];
-
-
-    let meshSize = {
+    let size = {
         width: 524,
         height: 300,
     }
-    let sonMeshSize = {
-        width: 200,
-        height: 80,
-    }
+
     let box = document.querySelector('.box');
-    box.style.width = `${meshSize.width}px`;
-    box.style.height = `${meshSize.height}px`;
+    box.style.width = `${size.width}px`;
+    box.style.height = `${size.height}px`;
+    let boxClass = new calculationPositionSize({
+        width: size.width,
+        height: size.height,
+        padding: {
+            top: 4,
+            bottom: 4,
+            left: 4,
+            right: 4,
+        },
+        numMax: arr.length,
+        spacing: 8,
+        type: 1,
+        change: false
+    });
+    let sonSize = boxClass.getSize();
     // 乱七八糟的小东西测试 计算
     for (let i = 0; i < arr.length; i++) {
         if (arr[i]) {
-            let itemElement = document.createElement('div');
-            itemElement.style.position = 'absolute';
-            itemElement.style.left = '';
-            itemElement.style.width = `${sonMeshSize.width}px`;
-            itemElement.style.height = `${sonMeshSize.height}px`;
-            itemElement.style.border = '1px solid green';
-            let calculation = {
-                size: meshSize,
-                sonSize: sonMeshSize,
-                index: i,
-                type: 2,
-            }
-            let position = calculationPosition(calculation);
-            console.log(position)
+            let itemElement = addElement(sonSize.width, sonSize.height);
+            let position = boxClass.getPosition(i);
             itemElement.style.left = `${position.x}px`;
             itemElement.style.top = `${position.y}px`;
             box.appendChild(itemElement);
-
             if (arr[i].children) {
-                let padding = {
-                    top: 6,
-                    bottom: 6,
-                    left: 6,
-                    right: 6,
-                }, type = 1;
-                let sizeData = {
-                    width: sonMeshSize.width,
-                    height: sonMeshSize.height,
-                    maxNum: arr[i].children.length,
-                    padding,
-                    type
-                }
-                let size = calculationSize(sizeData);
+                let childrenClass = new calculationPositionSize({
+                    width: sonSize.width,
+                    height: sonSize.height,
+                    padding: {
+                        top: 4,
+                        bottom: 4,
+                        left: 4,
+                        right: 4,
+                    },
+                    numMax: arr[i].children.length,
+                    spacing: 4,
+                    type: 2,
+                    change: false
+                });
+                let childrenSize = childrenClass.getSize();
                 for (let j = 0; j < arr[i].children.length; j++) {
-                    if (arr[i].children[j]) {
-                        let columnElement = addElement(size.width, size.height);
-                        let calculation = {
-                            size: sonMeshSize,
-                            sonSize: size,
-                            index: j,
-                            padding,
-                            type
-                        }
-                        let position = calculationPosition(calculation);
-                        columnElement.style.left = `${position.x}px`;
-                        columnElement.style.top = `${position.y}px`;
-                        itemElement.appendChild(columnElement);
-                    }
+                    let childrenElement = addElement(childrenSize.width, childrenSize.height);
+                    let childrenPosition = childrenClass.getPosition(j);
+                    childrenElement.style.left = `${childrenPosition.x}px`;
+                    childrenElement.style.top = `${childrenPosition.y}px`;
+                    itemElement.appendChild(childrenElement);
                 }
-
             }
         }
     }

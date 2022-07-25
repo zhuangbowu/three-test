@@ -10,9 +10,9 @@
             position: relative;
         }
 
-        /*div {*/
-        /*    box-sizing: border-box;*/
-        /*}*/
+        div {
+            box-sizing: border-box;
+        }
     </style>
 </head>
 <body>
@@ -31,7 +31,7 @@
     box.style.width = `${size.width}px`;
     box.style.height = `${size.height}px`;
     // 乱七八糟的小东西测试 计算
-    let posiClass = new calculationPositionSize({
+    let boxClass = new calculationPositionSize({
         width: size.width,
         height: size.height,
         padding: {
@@ -45,10 +45,10 @@
         type: 1,
         change: false
     });
-    let sonSize = posiClass.getSize(12);
+    let sonSize = boxClass.getSize();
     for (let i = 0; i < 12; i++) {
         let itemElement = addElement(sonSize.width, sonSize.height);
-        let posi = posiClass.getPosition(i);
+        let posi = boxClass.getPosition(i);
         itemElement.style.left = `${posi.x}px`;
         itemElement.style.top = `${posi.y}px`;
         box.appendChild(itemElement);
