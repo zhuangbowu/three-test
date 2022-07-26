@@ -1,4 +1,4 @@
-import * as THREE from "three";
+import * as THREE from 'three'
 
 function Throttle(fn, delay = 200) {
     let open = true;

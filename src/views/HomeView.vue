@@ -183,7 +183,7 @@ export default {
       setTimeout(() => {
         // this.addGlb('4dc15f621edd7945acba4d38796a32e8');
         // this.addGlb('demo');
-        this.addGlb(0, 'QM9ISwNNdzB8UAoOZpF8A3AXSJz3QQIdM9O2lacSsnjlN9YsNt1JXuXl5fa2JnWqgch2Vo4SmGDDVDyAhV5nDmTeKlFDhQc2QuYSE6pkuhgPLoFnVBoWf23W7n6JuuFucPCMqiOv5tkMzOqrjc1opzp3eu5NYImVlPwVJG2JCyuCWieW86D9KleO57kLQTsExkbViGH3');
+        this.addGlb(0, 'qyyYasGanng4VgUrV02s91q1DysYK5KqQk7fStWWZkzBDidQRWjMbWYvltrNICyXZCiZzFFLEevDD7guoBRccqGmpep8B6flOyL0HHkgamQIu5EGLQx41U22aZG4bxGKcRCNIHFrJVS2CXmkKlV2BNaPi4v5kvOupMBJU7kOfKARxDh0f4HEWH1mPpbZQ9Gxh9xmpADs');
 
       }, 2000)
       this.render();
@@ -193,9 +193,9 @@ export default {
     render: utils.Throttle(function () {
       //执行渲染操作   指定场景、相机作为参数
       renderer.render(scene, camera);
-      if (stats) {
-        stats.update();
-      }
+      // if (stats) {
+      //   stats.update();
+      // }
     }),
     // 调用方法创建形状
     /**
@@ -360,6 +360,7 @@ export default {
       gltfLoader.load(
           `static/glb/${text}.glb`,
           (gltf) => {
+            console.log(gltf)
             //可以设置每个mash的纹理
             let i = 0;
             gltf.scene.traverse(obj => {

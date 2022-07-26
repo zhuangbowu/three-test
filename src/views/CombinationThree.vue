@@ -307,9 +307,9 @@ export default {
 
     // 导出模型并下载
     exportGlb() {
-      console.log(utils.setName())
       const exporter = new GLTFExporter();
       exporter.parse(scene.children.filter(item => item.isMesh), (glb) => {
+        // console.log(glb)
         this.download(`${utils.setName()}.glb`, glb, 'application/octet-stream')
       }, (err) => {
         console.log(err)

@@ -4,8 +4,9 @@
       <el-main>
         <!-- 3D拖拽容器 -->
         <div class="drag-main">
-          <div class="container" :style="setContainerSize(this.form.size)">
+          <div class="container" :style="setContainerSize(this.form.size)" @mousedown.stop="boxMove">
             <div class="item"
+                 @click="choiceCLick(item)"
                  @mousedown.stop="draggableFun(item,$event)"
                  v-for="(item,index) in elementList"
                  :style="[setContainerSize(item.size),setContainerPosition(item.position)]"
@@ -31,11 +32,10 @@
                 <el-input type="text" v-model="item.num" aria-placeholder="填写数字"></el-input>
               </el-form-item>
             </template>
-            <el-form-item>
-              <el-button type="primary" @click="addCard">增加板卡类型</el-button>
-              <el-button type="primary" native-type="submit" @click="addElement">创建</el-button>
-              <el-button type="primary" @click="sceneLoad">立即渲染</el-button>
-            </el-form-item>
+            <el-button type="primary" @click="addCard">增加板卡类型</el-button>
+            <el-button type="primary" native-type="submit" @click="addElement">创建</el-button>
+            <el-button type="primary" @click="sceneLoad">立即渲染</el-button>
+            <el-button type="primary" @click="exportClick">导出</el-button>
           </el-form>
         </div>
       </el-aside>
@@ -55,6 +55,9 @@ export default {
   },
   data() {
     return {
+      // 键盘移动的时候
+      choiceList: [],
+      // 创建出来的
       elementList: [
         {
           "id": "0-0",
@@ -201,9 +204,29 @@ export default {
     }
   },
   mounted() {
+    document.onkeydown = (e) => {
+      switch (e.code) {
+          // 点击向上移动
+        case 'ArrowUp':
+          break;
+          // 点击向下移动
+        case 'ArrowDown':
+          break;
+          // 点击向左移动
+        case 'ArrowLeft':
+          break;
+          // 点击向右移动
+        case 'ArrowRight':
+          break;
+      }
+      console.log(e);
+    }
     // this.addElement();
   },
   methods: {
+    choiceCLick(item) {
+      console.log(item);
+    },
     // 鼠标拖拽
     draggableFun(item, event) {
       let div = event.target;
@@ -296,7 +319,13 @@ export default {
     },
     sceneLoad() {
       bus.$emit('setSlotList', this.elementList, this.form.size);
+    },
+    exportClick() {
+      bus.$emit('operationExportGlb');
     }
+  },
+  beforeDestroy() {
+
   }
 }
 </script>
@@ -325,6 +354,7 @@ export default {
         overflow: auto;
 
         > div {
+          cursor: default;
           //box-sizing: border-box;
           position: absolute;
           border: 1px solid green;

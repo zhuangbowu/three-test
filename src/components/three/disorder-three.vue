@@ -9,6 +9,7 @@ import * as THREE from 'three'
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
 import utils from "@/utils/utils";
 import bus from "@/utils/bus";
+import {GLTFExporter} from "three/examples/jsm/exporters/GLTFExporter";
 
 // 场景对象Scene
 let scene = null;
@@ -37,6 +38,9 @@ export default {
       this.slotList = slotList;
       this.sceneLoad();
     })
+    bus.$on('operationExportGlb', () => {
+      this.exportGlb();
+    })
 
     window.addEventListener('resize', () => {
       let container = document.querySelector('#disorder');
@@ -55,6 +59,39 @@ export default {
     })
   },
   methods: {
+    exportGlb() {
+      const exporter = new GLTFExporter();
+      exporter.parse(scene.children.filter(item => item.isMesh), (glb) => {
+        // console.log(glb)
+        this.download(`${utils.setName()}.glb`, glb, 'application/octet-stream')
+      }, (err) => {
+        console.log(err)
+      }, {
+        binary: true,
+        trishape: true,
+      })
+    },
+    download(filename, text, type = "text/plain") {
+      // Create an invisible A element
+      const a = document.createElement("a");
+      a.style.display = "none";
+      document.body.appendChild(a);
+
+      // Set the HREF to a Blob representation of the data to be downloaded
+      a.href = window.URL.createObjectURL(
+          new Blob([text], {type})
+      );
+
+      // Use download attribute to set set desired file name
+      a.setAttribute("download", filename);
+
+      // Trigger the download by simulating click
+      a.click();
+
+      // Cleanup
+      window.URL.revokeObjectURL(a.href);
+      document.body.removeChild(a);
+    },
     sceneLoad() {
       scene.remove.apply(scene, scene.children.filter(child => child.isMesh))
       let list = this.slotList;
@@ -78,9 +115,10 @@ export default {
         }
         let cardElement = utils.addElement(cardSize.width, cardSize.height, cardSize.depth, '#F56C6C');
         cardElement.name = item.id;
-        chassisElement.attach(cardElement);
+        chassisElement.add(cardElement);
         this.$nextTick(() => {
-          cardElement.position.set(cardPosition.x, -cardPosition.y, cardPosition.z)
+          cardElement.position.set(parseInt(cardPosition.x), -parseInt(cardPosition.y), cardPosition.z);
+          this.render();
         });
       })
       this.render();
