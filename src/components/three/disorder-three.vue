@@ -37,6 +37,22 @@ export default {
       this.slotList = slotList;
       this.sceneLoad();
     })
+
+    window.addEventListener('resize', () => {
+      let container = document.querySelector('#disorder');
+      let width = container.offsetWidth; //当前元素宽度
+      let height = container.offsetHeight; //当前元素高度
+      // 重置渲染器输出画布canvas尺寸
+      renderer.setSize(width, height);
+      // 全屏情况下：设置观察范围长宽比aspect为窗口宽高比
+      camera.aspect = width / height;
+      // 渲染器执行render方法的时候会读取相机对象的投影矩阵属性projectionMatrix
+      // 但是不会每渲染一帧，就通过相机的属性计算投影矩阵(节约计算资源)
+      // 如果相机的一些属性发生了变化，需要执行updateProjectionMatrix ()方法更新相机的投影矩阵
+      camera.updateProjectionMatrix();
+      //执行渲染操作   指定场景、相机作为参数
+      renderer.render(scene, camera);
+    })
   },
   methods: {
     sceneLoad() {
@@ -56,17 +72,16 @@ export default {
           depth: size.depth,
         }
         let cardPosition = {
-          x: item.position.split(',')[1],
-          y: item.position.split(',')[0],
+          x: item.position.split(',')[1] || 0,
+          y: item.position.split(',')[0] || 0,
           z: 10
         }
-        let cardElement = utils.addElement(cardSize.width, cardSize.height, cardSize.depth, '#67C23A');
+        let cardElement = utils.addElement(cardSize.width, cardSize.height, cardSize.depth, '#F56C6C');
         cardElement.name = item.id;
         chassisElement.attach(cardElement);
         this.$nextTick(() => {
           cardElement.position.set(cardPosition.x, -cardPosition.y, cardPosition.z)
         });
-        console.log(item, cardSize, cardPosition);
       })
       this.render();
     },

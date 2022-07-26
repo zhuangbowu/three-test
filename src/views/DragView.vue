@@ -270,7 +270,8 @@ export default {
     },
     addCard() {
       this.form.card.push({
-        size: '80,20,20',
+        size: '0,0,0',
+        position: '0,0',
         num: 0
       })
     },
@@ -283,6 +284,12 @@ export default {
             position: '',
             size: item.size,
           })
+        }
+      })
+      arr.forEach(item => {
+        let findIndex = this.elementList.findIndex(findItem => findItem.id === item.id);
+        if (findIndex !== -1) {
+          item.position = this.elementList[findIndex].position;
         }
       })
       this.elementList = arr;
