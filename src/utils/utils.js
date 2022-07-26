@@ -1,3 +1,5 @@
+import * as THREE from "three";
+
 function Throttle(fn, delay = 200) {
     let open = true;
     return function (...data) {
@@ -13,24 +15,27 @@ function Throttle(fn, delay = 200) {
         }, delay)
     }
 }
+
 function getRandomNum(m, n) {
     return Math.floor(Math.random() * (m - n) + n);
 }
+
 function setName() {
-    const KEY_LEN=10;
-    const KEY_COUNT=20;
-    const CHARS='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let arr=[];
-    for(let i=0;i<KEY_COUNT;i++){
-        let key='';
-        for(let j=0;j<KEY_LEN;j++){
-            key+=CHARS[Math.floor(Math.random()*CHARS.length)];
+    const KEY_LEN = 10;
+    const KEY_COUNT = 20;
+    const CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let arr = [];
+    for (let i = 0; i < KEY_COUNT; i++) {
+        let key = '';
+        for (let j = 0; j < KEY_LEN; j++) {
+            key += CHARS[Math.floor(Math.random() * CHARS.length)];
         }
         arr.push(key);
     }
     return arr.join('').toString();
 }
-let formatArray = (arr)=> {
+
+let formatArray = (arr) => {
     let list = [];
     for (let i = 0; i < arr.length; i++) {
         let column = arr[i].index.split('-');
@@ -50,6 +55,7 @@ let formatArray = (arr)=> {
     }
     return list;
 }
+
 /**
  * 获取其中每个模型的大小和坐标的通用class类
  * width,height 父级的宽高
@@ -186,10 +192,46 @@ class calculationPositionSize {
 }
 
 
+// 创建一个空板卡
+let addElement = (width = 1, height = 1, depth = 1, color = '#409EFF') => {
+    let parameters = {
+        color: color
+    }
+    let geometry = new THREE.BoxGeometry(width, height, depth); //创建一个立方体几何对象Geometry
+    let material = new THREE.MeshLambertMaterial({
+        ...parameters,
+        // opacity: 0.5,
+        // transparent: true
+    }); //材质对象Material
+    let mesh = new THREE.Mesh(geometry, material); //网格模型对象Mesh
+    // 改变定点位置从右上前开始计算坐标值的位置
+    mesh.geometry.translate(width / 2, -(height / 2), -(depth / 2));
+    return mesh;
+}
+// 创建一个占位符
+let addGroupElement = (width = 1, height = 1, depth = 1) => {
+    let parameters = {
+        color: '#ffffff'
+    }
+    let geometry = new THREE.BoxGeometry(width, height, depth); //创建一个立方体几何对象Geometry
+    let material = new THREE.MeshLambertMaterial({
+        ...parameters,
+        opacity: 0,
+        transparent: true
+    }); //材质对象Material
+    let mesh = new THREE.Mesh(geometry, material); //网格模型对象Mesh
+    // 改变定点位置从右上前开始计算坐标值的位置
+    mesh.geometry.translate(width / 2, -(height / 2), -(depth / 2));
+    return mesh;
+}
+
+
 export default {
     Throttle,
     getRandomNum,
     setName,
     calculationPositionSize,
-    formatArray
-};
+    formatArray,
+    addElement,
+    addGroupElement,
+}
