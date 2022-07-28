@@ -1,4 +1,7 @@
 import * as THREE from 'three'
+import {DRACOLoader} from "three/examples/jsm/loaders/DRACOLoader";
+import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader";
+import {LoadingManager} from "three";
 
 function Throttle(fn, delay = 200) {
     let open = true;
@@ -20,9 +23,7 @@ function getRandomNum(m, n) {
     return Math.floor(Math.random() * (m - n) + n);
 }
 
-function setName() {
-    const KEY_LEN = 10;
-    const KEY_COUNT = 20;
+function setName(KEY_LEN = 10, KEY_COUNT = 20) {
     const CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let arr = [];
     for (let i = 0; i < KEY_COUNT; i++) {
@@ -194,19 +195,66 @@ class calculationPositionSize {
 
 // 创建一个空板卡
 let addElement = (width = 1, height = 1, depth = 1, color = '#409EFF') => {
-    let parameters = {
-        color: color
-    }
-    let geometry = new THREE.BoxGeometry(width, height, depth); //创建一个立方体几何对象Geometry
-    let material = new THREE.MeshLambertMaterial({
-        ...parameters,
-        // opacity: 0.5,
-        // transparent: true
-    }); //材质对象Material
-    let mesh = new THREE.Mesh(geometry, material); //网格模型对象Mesh
-    // 改变定点位置从右上前开始计算坐标值的位置
-    mesh.geometry.translate(width / 2, -(height / 2), -(depth / 2));
-    return mesh;
+    return new Promise((resolve, reject) => {
+        const dracoLoader = new DRACOLoader();  //
+        dracoLoader.setDecoderPath('static/glb/');//设置解压库文件路径
+        dracoLoader.setDecoderConfig({type: 'js'})  //使用js方式解压
+        dracoLoader.preload()  //初始化_initDecoder 解码器
+        const gltfLoader = new GLTFLoader(new LoadingManager());
+        // GLTF loader
+        gltfLoader.setDRACOLoader(dracoLoader);   //gltfloader使用dracoLoader
+        gltfLoader.load(`static/glb/demo.glb`, (gltf) => {
+                let geometry = new THREE.BoxGeometry(width, height, depth); //创建一个立方体几何对象Geometry
+                let material = new THREE.MeshLambertMaterial({
+                    color: '#ff0000',
+                    opacity: 0,
+                    transparent: true
+                }); //材质对象Material
+                let mesh = new THREE.Mesh(geometry, material); //网格模型对象Mesh
+                // 改变定点位置从右上前开始计算坐标值的位置
+                mesh.geometry.translate(width / 2, -(height / 2), -(depth / 2));
+                let box = new THREE.Box3().expandByObject(mesh);
+                mesh.userData.originalBox = box;
+
+                let scene = gltf.scene;
+                let newSize = {
+                    width: width,
+                    height: height,
+                    depth: depth,
+                };
+                let sceneBox = new THREE.Box3().expandByObject(scene);
+                let usedSize = {
+                    width: sceneBox.max.x - sceneBox.min.x,
+                    height: sceneBox.max.y - sceneBox.min.y,
+                    depth: sceneBox.max.z - sceneBox.min.z,
+                };
+
+                scene.scale.set(newSize.width / usedSize.width, newSize.height / usedSize.height, newSize.depth / usedSize.depth);
+                gltf.scene.position.set(width / 2, -(height / 2), -(depth / 2))
+                mesh.attach(scene);
+                resolve(mesh)
+            }, (xhr) => {
+                console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+            }, (e) => {
+                reject(e)
+            }
+        )
+    })
+
+
+    // let parameters = {
+    //     color: color
+    // }
+    // let geometry = new THREE.BoxGeometry(width, height, depth); //创建一个立方体几何对象Geometry
+    // let material = new THREE.MeshLambertMaterial({
+    //     ...parameters,
+    //     // opacity: 0.5,
+    //     // transparent: true
+    // }); //材质对象Material
+    // let mesh = new THREE.Mesh(geometry, material); //网格模型对象Mesh
+    // // 改变定点位置从右上前开始计算坐标值的位置
+    // mesh.geometry.translate(width / 2, -(height / 2), -(depth / 2));
+    // return mesh;
 }
 // 创建一个占位符
 let addGroupElement = (width = 1, height = 1, depth = 1) => {
@@ -224,7 +272,6 @@ let addGroupElement = (width = 1, height = 1, depth = 1) => {
     mesh.geometry.translate(width / 2, -(height / 2), -(depth / 2));
     return mesh;
 }
-
 
 export default {
     Throttle,

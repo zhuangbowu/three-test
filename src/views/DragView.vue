@@ -11,7 +11,7 @@
                  v-for="(item,index) in elementList"
                  :style="[setContainerSize(item.size),setContainerPosition(item.position)]"
                  :key="item.id">
-              板卡{{ index + 1 }}
+              板卡{{ item.id }}
             </div>
           </div>
         </div>
@@ -22,14 +22,14 @@
         <div class="edit">
           <el-form ref="form" :model="form" label-width="120px" @submit.native.prevent>
             <el-form-item label="机框尺寸(宽高深)">
-              <el-input type="text" v-model="form.size" aria-placeholder="填写数字中间以逗号隔开"></el-input>
+              <el-input type="text" v-model="form.size" @blur="addElement" aria-placeholder="填写数字中间以逗号隔开"></el-input>
             </el-form-item>
             <template v-for="item in form.card">
               <el-form-item label="板卡尺寸(宽高深)">
-                <el-input type="text" v-model="item.size" aria-placeholder="填写数字中间以逗号隔开"></el-input>
+                <el-input type="text" v-model="item.size" @blur="addElement" aria-placeholder="填写数字中间以逗号隔开"></el-input>
               </el-form-item>
               <el-form-item label="板卡数量">
-                <el-input type="text" v-model="item.num" aria-placeholder="填写数字"></el-input>
+                <el-input type="text" v-model="item.num" @blur="addElement" aria-placeholder="填写数字"></el-input>
               </el-form-item>
             </template>
             <el-button type="primary" @click="addCard">增加板卡类型</el-button>
@@ -55,7 +55,7 @@ export default {
   },
   data() {
     return {
-      // 键盘移动的时候
+      // 选中需要单独做移动的多条数据
       choiceList: [],
       // 创建出来的
       elementList: [
@@ -172,12 +172,15 @@ export default {
       ],
       form: {
         size: '442,1420,650',
+        type: utils.setName(2, 6),
         card: [
           {
-            size: '40,600,20',
+            type: utils.setName(2, 6),
+            size: '36,580,20',
             num: 18
           },
           {
+            type: utils.setName(2, 6),
             size: '420,48,20',
             num: 4
           },
@@ -185,6 +188,16 @@ export default {
       }
     }
   },
+  // watch: {
+  //   form: {
+  //     handler() {
+  //       setTimeout(()=>{
+  //         this.addElement();
+  //       },1000)
+  //     },
+  //     deep: true
+  //   }
+  // },
   computed: {
     setContainerSize() {
       return (size) => {
@@ -204,24 +217,24 @@ export default {
     }
   },
   mounted() {
-    document.onkeydown = (e) => {
-      switch (e.code) {
-          // 点击向上移动
-        case 'ArrowUp':
-          break;
-          // 点击向下移动
-        case 'ArrowDown':
-          break;
-          // 点击向左移动
-        case 'ArrowLeft':
-          break;
-          // 点击向右移动
-        case 'ArrowRight':
-          break;
-      }
-      console.log(e);
-    }
-    // this.addElement();
+    // document.onkeydown = (e) => {
+    //   switch (e.code) {
+    //       // 点击向上移动
+    //     case 'ArrowUp':
+    //       break;
+    //       // 点击向下移动
+    //     case 'ArrowDown':
+    //       break;
+    //       // 点击向左移动
+    //     case 'ArrowLeft':
+    //       break;
+    //       // 点击向右移动
+    //     case 'ArrowRight':
+    //       break;
+    //   }
+    //   console.log(e);
+    // }
+    this.addElement();
   },
   methods: {
     choiceCLick(item) {
@@ -295,6 +308,7 @@ export default {
       this.form.card.push({
         size: '0,0,0',
         position: '0,0',
+        type: utils.setName(2, 6),
         num: 0
       })
     },
@@ -304,6 +318,7 @@ export default {
         for (let i = 0; i < item.num; i++) {
           arr.push({
             id: `${index}-${i}`,
+            type: item.type,
             position: '',
             size: item.size,
           })
@@ -318,7 +333,12 @@ export default {
       this.elementList = arr;
     },
     sceneLoad() {
-      bus.$emit('setSlotList', this.elementList, this.form.size);
+      let obj = {
+        size: this.form.size,
+        type: this.form.type,
+        arr: this.elementList
+      }
+      bus.$emit('setSlotList', obj);
     },
     exportClick() {
       bus.$emit('operationExportGlb');

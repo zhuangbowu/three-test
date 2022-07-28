@@ -9,6 +9,7 @@
     <el-button @click="getSize">查询模型的宽高深的值</el-button>
     <el-input type="text" v-model="modelVal"></el-input>
     <el-button @click="setSize">修改模型的宽高深</el-button>
+    <el-button @click="setPosition">修改模型的x位置</el-button>
     <el-button @click="render">更新</el-button>
     <!-- 3D模型容器 -->
     <div id="container"></div>
@@ -43,7 +44,7 @@ let renderer = null;
 let controls = null;
 // 添加性能检测器
 // let stats = addStats()
-
+let arr = [];
 
 function Throttle(fn, delay = 200) {
   let open = true;
@@ -183,7 +184,7 @@ export default {
       setTimeout(() => {
         // this.addGlb('4dc15f621edd7945acba4d38796a32e8');
         // this.addGlb('demo');
-        this.addGlb(0, 'qyyYasGanng4VgUrV02s91q1DysYK5KqQk7fStWWZkzBDidQRWjMbWYvltrNICyXZCiZzFFLEevDD7guoBRccqGmpep8B6flOyL0HHkgamQIu5EGLQx41U22aZG4bxGKcRCNIHFrJVS2CXmkKlV2BNaPi4v5kvOupMBJU7kOfKARxDh0f4HEWH1mPpbZQ9Gxh9xmpADs');
+        this.addGlb(0, 'demo');
 
       }, 2000)
       this.render();
@@ -275,12 +276,21 @@ export default {
     },
     setSize() {
       scene.children.forEach(item => {
-        if (item.isGroup) {
+        if (item.isMesh) {
           let box = new THREE.Box3().expandByObject(item);
           if (!item.originalBox) {
             item.originalBox = box;
           }
           item.scale.set(this.modelVal / (item.originalBox.max.x - item.originalBox.min.x), item.scale.y, item.scale.z);
+          this.render();
+        }
+      })
+    },
+    setPosition() {
+      scene.children.forEach(item => {
+        if (item.isMesh) {
+
+          item.position.set((item.position.x + 10), item.position.y, item.position.z);
           this.render();
         }
       })
@@ -357,30 +367,54 @@ export default {
       // GLTF loader
       gltfLoader.setDRACOLoader(this.dracoLoader);   //gltfloader使用dracoLoader
       console.time();
-      gltfLoader.load(
-          `static/glb/${text}.glb`,
-          (gltf) => {
-            console.log(gltf)
-            //可以设置每个mash的纹理
-            let i = 0;
-            gltf.scene.traverse(obj => {
-              // console.log(obj)
-              i++;
+      gltfLoader.load(`static/glb/${text}.glb`, (gltf) => {
+            let width = 300;
+            let height = 300;
+            let depth = 300;
+            let geometry = new THREE.BoxGeometry(width, height, depth); //创建一个立方体几何对象Geometry
+            let material = new THREE.MeshLambertMaterial({
+              color: '#ff0000',
+              opacity: 0.3,
+              transparent: true
+            }); //材质对象Material
+            let mesh = new THREE.Mesh(geometry, material); //网格模型对象Mesh
+            // 改变定点位置从右上前开始计算坐标值的位置
+            mesh.geometry.translate(width / 2, -(height / 2), -(depth / 2));
+
+            let box = new THREE.Box3().expandByObject(gltf.scene);
+            let newSize = {
+              width: width,
+              height: height,
+              depth: depth,
+            };
+            let usedSize = {
+              width: box.max.x - box.min.x,
+              height: box.max.y - box.min.y,
+              depth: box.max.z - box.min.z,
+            };
+            gltf.scene.scale.set(newSize.width / usedSize.width, newSize.height / usedSize.height, newSize.depth / usedSize.depth);
+            gltf.scene.position.set(width / 2, -(height / 2), -(depth / 2))
+            mesh.attach(gltf.scene);
+            scene.add(mesh);
+
+
+            let geometry2 = new THREE.BoxGeometry(width / 2, height / 2, depth / 2); //创建一个立方体几何对象Geometry
+            let material2 = new THREE.MeshLambertMaterial({
+              color: '#00ff00',
+              opacity: 0.3,
+              transparent: true
+            }); //材质对象Material
+            let mesh2 = new THREE.Mesh(geometry2, material2); //网格模型对象Mesh
+            // 改变定点位置从右上前开始计算坐标值的位置
+            mesh2.geometry.translate((width / 2) / 2, -((height / 2) / 2), -((depth / 2) / 2));
+            this.$nextTick(() => {
+              mesh2.position.set(0, 0, 100)
+              this.render();
             })
-
-            if (type === 1) {
-              scene.children.forEach(item => {
-                if (item.isGroup) {
-                  item.attach(gltf.scene)
-                }
-              })
-            } else {
-              scene.add(gltf.scene);
-            }
-
-            console.timeEnd();
+            mesh.attach(mesh2);
+        console.log(gltf)
+            // scene.add(gltf.scene);
             this.render();
-            console.log(scene)
             // gltf.scene.rotateY(Math.PI / 4)
             // scene.add(gltf.scene)
             // console.log(scene, i);

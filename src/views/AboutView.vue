@@ -80,7 +80,8 @@ export default {
       }); //材质对象Material
       let mesh2 = new THREE.Mesh(geometry2, material2); //网格模型对象Mesh
       this.$nextTick(()=>{
-        mesh2.position.set(20, 20, 20)
+        mesh2.position.set(20, 20, 20);
+        this.render();
       })
       mesh.attach(mesh2); //网格模型添加到场景中
 
