@@ -264,16 +264,17 @@ export default {
         height: item.size.split(',')[1],
         depth: item.size.split(',')[2],
       };
-      let element = await utils.addElement(size.width, size.height, size.depth, '#409EFF');
+      let element = await utils.addElement(parseInt(size.width), parseInt(size.height), parseInt(size.depth), '#409EFF');
       element.userData.type = item.type;
       return element;
     },
 
     exportGlb() {
       const exporter = new GLTFExporter();
-      exporter.parse(scene.children.filter(item => item.userData.data), (glb) => {
-        // console.log(glb)
-        this.download(`${utils.setName()}.glb`, glb, 'application/octet-stream')
+      let item = scene.children.find(item => item.userData.data);
+      exporter.parse(item, (glb) => {
+        console.log(glb)
+        // this.download(`${utils.setName()}.glb`, glb, 'application/octet-stream')
       }, (err) => {
         console.log(err)
       }, {

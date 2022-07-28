@@ -412,7 +412,7 @@ export default {
               this.render();
             })
             mesh.attach(mesh2);
-        console.log(gltf)
+            console.log(gltf)
             // scene.add(gltf.scene);
             this.render();
             // gltf.scene.rotateY(Math.PI / 4)

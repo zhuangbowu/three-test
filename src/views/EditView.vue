@@ -235,9 +235,12 @@ export default {
     },
     // 导出模型并下载
     exportGlb() {
-      console.log(utils.setName())
+      // console.log(utils.setName())
       const exporter = new GLTFExporter();
-      exporter.parse(scene.children.filter(item => item.isMesh), (glb) => {
+      console.log(scene)
+      let group = scene.children.filter(item => item.isGroup);
+      exporter.parse(group, (glb) => {
+        console.log(glb)
         this.download(`${utils.setName()}.glb`, glb, 'application/octet-stream')
       }, (err) => {
         console.log(err)
@@ -247,36 +250,40 @@ export default {
       })
     },
     // 点击根据参数生成模型
-    meshRender() {
-      scene.remove.apply(scene, scene.children.filter(child => child.isMesh))
-      let {size} = this.mesh;
-      let meshSize = size.split(',');
-      let parameters = {
-        color: '#409EFF'
-      }
-      // 765×444×622
-      let mesh = this.addRectangle(meshSize[2], meshSize[1], meshSize[0], parameters);
-      mesh.name = '机箱';
-      console.log(mesh)
-      for (let i = 0; i < this.mesh.slotList.length; i++) {
-        let sonMeshSize = this.mesh.slotList[i].size.split(',');
-        let colorArr = ['#67C23A', '#E6A23C', '#F56C6C', '#909399']
-        let parameters = {
-          color: colorArr[utils.getRandomNum(0, 3)]
-        }
-        let sonMesh = this.addRectangle(sonMeshSize[2], sonMeshSize[1], sonMeshSize[0], parameters, mesh);
-        sonMesh.position.set(((meshSize[2] - (sonMeshSize[2] * (i + 1))) - ((i + 1) * 1.69)), -((meshSize[1] - sonMeshSize[1]) / 2), 5);
-        if (this.mesh.slotList[i].children) {
-          for (let j = 0; j < this.mesh.slotList[i].children.length; j++) {
-            let colorArr2 = ['#9d4edd', '#3d348b', '#073b4c', '#c1121f']
-            let parameters = {
-              color: colorArr2[utils.getRandomNum(0, 3)]
-            }
-            let sonMesh2 = this.addRectangle(sonMeshSize[2] - 3, ((sonMeshSize[1] - 9) / this.mesh.slotList[i].children.length), sonMeshSize[0], parameters, sonMesh);
-            sonMesh2.position.set(1.5, -(j * ((sonMeshSize[1] / this.mesh.slotList[i].children.length)) + 3), 5);
-          }
-        }
-      }
+    async meshRender() {
+      let obj = await utils.addElement(100, 100, 100);
+      scene.attach(obj);
+      // scene.remove.apply(scene, scene.children.filter(child => child.isMesh))
+      // let {size} = this.mesh;
+      // let meshSize = size.split(',');
+      // let parameters = {
+      //   color: '#409EFF'
+      // }
+      // // 765×444×622
+      // let mesh = this.addRectangle(meshSize[2], meshSize[1], meshSize[0], parameters);
+      // mesh.name = '机箱';
+      // let group = new THREE.Group();
+      // mesh.attach(group);
+      // console.log(mesh)
+      // for (let i = 0; i < this.mesh.slotList.length; i++) {
+      //   let sonMeshSize = this.mesh.slotList[i].size.split(',');
+      //   let colorArr = ['#67C23A', '#E6A23C', '#F56C6C', '#909399']
+      //   let parameters = {
+      //     color: colorArr[utils.getRandomNum(0, 3)]
+      //   }
+      //   let sonMesh = this.addRectangle(sonMeshSize[2], sonMeshSize[1], sonMeshSize[0], parameters, group);
+      //   sonMesh.position.set(((meshSize[2] - (sonMeshSize[2] * (i + 1))) - ((i + 1) * 1.69)), -((meshSize[1] - sonMeshSize[1]) / 2), 5);
+      //   if (this.mesh.slotList[i].children) {
+      //     for (let j = 0; j < this.mesh.slotList[i].children.length; j++) {
+      //       let colorArr2 = ['#9d4edd', '#3d348b', '#073b4c', '#c1121f']
+      //       let parameters = {
+      //         color: colorArr2[utils.getRandomNum(0, 3)]
+      //       }
+      //       let sonMesh2 = this.addRectangle(sonMeshSize[2] - 3, ((sonMeshSize[1] - 9) / this.mesh.slotList[i].children.length), sonMeshSize[0], parameters, sonMesh);
+      //       sonMesh2.position.set(1.5, -(j * ((sonMeshSize[1] / this.mesh.slotList[i].children.length)) + 3), 5);
+      //     }
+      //   }
+      // }
       // mesh.rotateY(Math.PI / 2);
       // camera.lookAt(scene.position); //设置相机方向(指向的场景对象)
       // camera.trace.x

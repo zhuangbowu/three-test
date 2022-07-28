@@ -207,7 +207,7 @@ let addElement = (width = 1, height = 1, depth = 1, color = '#409EFF') => {
                 let geometry = new THREE.BoxGeometry(width, height, depth); //创建一个立方体几何对象Geometry
                 let material = new THREE.MeshLambertMaterial({
                     color: '#ff0000',
-                    opacity: 0,
+                    opacity: 0.3,
                     transparent: true
                 }); //材质对象Material
                 let mesh = new THREE.Mesh(geometry, material); //网格模型对象Mesh
@@ -216,7 +216,13 @@ let addElement = (width = 1, height = 1, depth = 1, color = '#409EFF') => {
                 let box = new THREE.Box3().expandByObject(mesh);
                 mesh.userData.originalBox = box;
 
-                let scene = gltf.scene;
+
+                let group = gltf.scene.clone();
+                // group.copy(gltf.scene);
+                // gltf.scene.traverse(obj => {
+                //     console.log(obj);
+                // })
+                let scene = group
                 let newSize = {
                     width: width,
                     height: height,
@@ -231,8 +237,8 @@ let addElement = (width = 1, height = 1, depth = 1, color = '#409EFF') => {
 
                 scene.scale.set(newSize.width / usedSize.width, newSize.height / usedSize.height, newSize.depth / usedSize.depth);
                 gltf.scene.position.set(width / 2, -(height / 2), -(depth / 2))
-                mesh.attach(scene);
-                resolve(mesh)
+                // mesh.attach(scene);
+                resolve(group)
             }, (xhr) => {
                 console.log((xhr.loaded / xhr.total * 100) + '% loaded');
             }, (e) => {
