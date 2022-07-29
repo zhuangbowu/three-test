@@ -159,7 +159,7 @@ export default {
       // camera = new THREE.OrthographicCamera(-s * k, s * k, s, -s, 1, 1000);
       // 透视投影相机（人眼模式、近大远小）
       camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 28000);
-      camera.position.set(0, 500, 2400); //设置相机位置
+      camera.position.set(0, 0, 10); //设置相机位置
       camera.lookAt(scene.position); //设置相机方向(指向的场景对象)
       /**
        * 创建渲染器对象

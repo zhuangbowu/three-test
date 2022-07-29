@@ -217,7 +217,26 @@ let addElement = (width = 1, height = 1, depth = 1, color = '#409EFF') => {
                 mesh.userData.originalBox = box;
 
 
-                let group = gltf.scene.clone();
+                let group = new THREE.Group();
+                group.name = '加载中';
+                console.log(gltf.scene)
+                let arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 25, 26, 27, 28]
+                for (let i = gltf.scene.children.length - 1; i >= 0; i--) {
+                    const item = gltf.scene.children[i];
+                    if (arr.includes(i)) {
+                        group.attach(item);
+                    } else {
+                        console.log('出问题的', item)
+                    }
+
+                }
+                // group.children.forEach(item => {
+                //     if (item.name === "Light" || item.name === "Camera" || item.isMesh) {
+                //         console.log(item)
+                //         group.remove(item);
+                //     }
+                // })
+                console.log(group)
                 // group.copy(gltf.scene);
                 // gltf.scene.traverse(obj => {
                 //     console.log(obj);
@@ -235,8 +254,8 @@ let addElement = (width = 1, height = 1, depth = 1, color = '#409EFF') => {
                     depth: sceneBox.max.z - sceneBox.min.z,
                 };
 
-                scene.scale.set(newSize.width / usedSize.width, newSize.height / usedSize.height, newSize.depth / usedSize.depth);
-                gltf.scene.position.set(width / 2, -(height / 2), -(depth / 2))
+                // scene.scale.set(newSize.width / usedSize.width, newSize.height / usedSize.height, newSize.depth / usedSize.depth);
+                // gltf.scene.position.set(width / 2, -(height / 2), -(depth / 2))
                 // mesh.attach(scene);
                 resolve(group)
             }, (xhr) => {
