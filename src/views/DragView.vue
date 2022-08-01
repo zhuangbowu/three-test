@@ -1,17 +1,18 @@
 <template>
-  <div class="drag-view">
+  <div class="drag-view" @click="resetBoxForm">
     <el-container>
       <el-main>
         <!-- 3D拖拽容器 -->
         <div class="drag-main">
-          <div class="container" :style="setContainerSize(this.form.size)" @mousedown.stop="boxMove">
+          <div class="container" :style="setContainerSize(form.width,form.height)">
             <div class="item"
-                 @click="choiceCLick(item)"
+                 :class="{'is-active':item.index===boxForm.index}"
+                 @click.stop="choiceCLick(item)"
                  @mousedown.stop="draggableFun(item,$event)"
                  v-for="(item,index) in elementList"
-                 :style="[setContainerSize(item.size),setContainerPosition(item.position)]"
+                 :style="[setContainerSize(item.width,item.height),setContainerPosition(item.x,item.y)]"
                  :key="item.id">
-              板卡{{ item.id }}
+              板卡{{ item.index }}
             </div>
           </div>
         </div>
@@ -19,24 +20,84 @@
       </el-main>
       <el-aside width="500px">
         <!-- 编辑区域 -->
-        <div class="edit">
-          <el-form ref="form" :model="form" label-width="120px" @submit.native.prevent>
-            <el-form-item label="机框尺寸(宽高深)">
-              <el-input type="text" v-model="form.size" @blur="addElement" aria-placeholder="填写数字中间以逗号隔开"></el-input>
+        <div class="edit" @click.stop="">
+          <el-form ref="form" :model="form" label-width="120px" @submit.native.prevent v-if="elementList.length===0">
+            <el-form-item label="机框宽度">
+              <el-input type="number" min="1" v-model="form.width" @blur="addElement"
+                        aria-placeholder="填写数字中间以逗号隔开"></el-input>
             </el-form-item>
-            <template v-for="item in form.card">
-              <el-form-item label="板卡尺寸(宽高深)">
-                <el-input type="text" v-model="item.size" @blur="addElement" aria-placeholder="填写数字中间以逗号隔开"></el-input>
+            <el-form-item label="机框高度">
+              <el-input type="number" min="1" v-model="form.height" @blur="addElement"
+                        aria-placeholder="填写数字中间以逗号隔开"></el-input>
+            </el-form-item>
+            <el-form-item label="机框深度">
+              <el-input type="number" min="1" v-model="form.depth" @blur="addElement"
+                        aria-placeholder="填写数字中间以逗号隔开"></el-input>
+            </el-form-item>
+            <div class="two" v-for="(item,index) in form.card" :key="index">
+              <el-form-item label="板卡宽度">
+                <el-input type="number" min="1" v-model="item.width" @blur="addElement"
+                          aria-placeholder="填写数字中间以逗号隔开"></el-input>
+              </el-form-item>
+              <el-form-item label="板卡高度">
+                <el-input type="number" min="1" v-model="item.height" @blur="addElement"
+                          aria-placeholder="填写数字中间以逗号隔开"></el-input>
+              </el-form-item>
+              <el-form-item label="板卡深度">
+                <el-input type="number" min="1" v-model="item.depth" @blur="addElement"
+                          aria-placeholder="填写数字中间以逗号隔开"></el-input>
+              </el-form-item>
+              <el-form-item label="板卡x轴">
+                <el-input type="number" min="0" v-model="item.x" @blur="addElement"
+                          aria-placeholder="填写数字中间以逗号隔开"></el-input>
+              </el-form-item>
+              <el-form-item label="板卡y轴">
+                <el-input type="number" min="0" v-model="item.y" @blur="addElement"
+                          aria-placeholder="填写数字中间以逗号隔开"></el-input>
               </el-form-item>
               <el-form-item label="板卡数量">
                 <el-input type="text" v-model="item.num" @blur="addElement" aria-placeholder="填写数字"></el-input>
               </el-form-item>
-            </template>
-            <el-button type="primary" @click="addCard">增加板卡类型</el-button>
-            <el-button type="primary" native-type="submit" @click="addElement">创建</el-button>
-            <el-button type="primary" @click="sceneLoad">立即渲染</el-button>
-            <el-button type="primary" @click="exportClick">导出</el-button>
+            </div>
+            <el-button type="primary" @click.stop="addCard">增加板卡类型</el-button>
+            <el-button type="primary" native-type="submit" @click.stop="addElement">创建</el-button>
           </el-form>
+
+
+          <el-form ref="form" :model="boxForm" label-width="120px" @submit.native.prevent v-else>
+            <el-form-item label="板卡宽度">
+              <el-input type="number" min="1" v-model="boxForm.width"
+                        aria-placeholder="填写数字中间以逗号隔开"></el-input>
+            </el-form-item>
+            <el-form-item label="板卡高度">
+              <el-input type="number" min="1" v-model="boxForm.height"
+                        aria-placeholder="填写数字中间以逗号隔开"></el-input>
+            </el-form-item>
+            <el-form-item label="板卡深度">
+              <el-input type="number" min="1" v-model="boxForm.depth"
+                        aria-placeholder="填写数字中间以逗号隔开"></el-input>
+            </el-form-item>
+            <el-form-item label="板卡x轴">
+              <el-input type="number" min="0" v-model="boxForm.x"
+                        aria-placeholder="填写数字中间以逗号隔开"></el-input>
+            </el-form-item>
+            <el-form-item label="板卡y轴">
+              <el-input type="number" min="0" v-model="boxForm.y"
+                        aria-placeholder="填写数字中间以逗号隔开"></el-input>
+            </el-form-item>
+            <el-form-item label="板卡类型">
+              <el-input type="text" v-model="boxForm.type"
+                        aria-placeholder="填写数字中间以逗号隔开"></el-input>
+            </el-form-item>
+            <el-form-item label="板卡序列">
+              <el-input type="text" v-model="boxForm.index"
+                        aria-placeholder="填写数字中间以逗号隔开"></el-input>
+            </el-form-item>
+            <el-button type="primary" @click.stop="addCardOne">新增板卡</el-button>
+            <el-button type="primary" @click.stop="deleteCardOne">删除板卡</el-button>
+          </el-form>
+          <el-button type="primary" @click.stop="sceneLoad">立即渲染</el-button>
+          <el-button type="primary" @click.stop="exportClick">导出</el-button>
         </div>
       </el-aside>
     </el-container>
@@ -58,187 +119,126 @@ export default {
       // 选中需要单独做移动的多条数据
       choiceList: [],
       // 创建出来的
-      elementList: [
-        {
-          "id": "0-0",
-          "position": "0,0",
-          "size": "40,600,20"
-        },
-        {
-          "id": "0-1",
-          "position": "0,50",
-          "size": "40,600,20"
-        },
-        {
-          "id": "0-2",
-          "position": "0,103",
-          "size": "40,600,20"
-        },
-        {
-          "id": "0-3",
-          "position": "0,250",
-          "size": "40,600,20"
-        },
-        {
-          "id": "0-4",
-          "position": "0,300",
-          "size": "40,600,20"
-        },
-        {
-          "id": "0-5",
-          "position": "0,351",
-          "size": "40,600,20"
-        },
-        {
-          "id": "0-6",
-          "position": "0,400",
-          "size": "40,600,20"
-        },
-        {
-          "id": "0-7",
-          "position": "818,0",
-          "size": "40,600,20"
-        },
-        {
-          "id": "0-8",
-          "position": "818,56",
-          "size": "40,600,20"
-        },
-        {
-          "id": "0-9",
-          "position": "818,104",
-          "size": "40,600,20"
-        },
-        {
-          "id": "0-10",
-          "position": "818,155",
-          "size": "40,600,20"
-        },
-        {
-          "id": "0-11",
-          "position": "818,205",
-          "size": "40,600,20"
-        },
-        {
-          "id": "0-12",
-          "position": "818,253",
-          "size": "40,600,20"
-        },
-        {
-          "id": "0-13",
-          "position": "818,302",
-          "size": "40,600,20"
-        },
-        {
-          "id": "0-14",
-          "position": "818,351",
-          "size": "40,600,20"
-        },
-        {
-          "id": "0-15",
-          "position": "818,400",
-          "size": "40,600,20"
-        },
-        {
-          "id": "0-16",
-          "position": "0,150",
-          "size": "40,600,20"
-        },
-        {
-          "id": "0-17",
-          "position": "0,198",
-          "size": "40,600,20"
-        },
-        {
-          "id": "1-0",
-          "position": "765,0",
-          "size": "420,48,20"
-        },
-        {
-          "id": "1-1",
-          "position": "712,0",
-          "size": "420,48,20"
-        },
-        {
-          "id": "1-2",
-          "position": "660,0",
-          "size": "420,48,20"
-        },
-        {
-          "id": "1-3",
-          "position": "606,0",
-          "size": "420,48,20"
-        }
-      ],
+      elementList: [],
       form: {
+        width: 442,
+        height: 1420,
+        depth: 650,
+
         size: '442,1420,650',
         type: utils.setName(2, 6),
         card: [
           {
             type: utils.setName(2, 6),
-            size: '36,580,20',
+            width: 36,
+            height: 580,
+            depth: 20,
+            x: 0,
+            y: 0,
             num: 18
           },
           {
             type: utils.setName(2, 6),
-            size: '420,48,20',
+            width: 420,
+            height: 48,
+            depth: 20,
+            x: 0,
+            y: 0,
             num: 4
           },
         ]
-      }
+      },
+      boxForm: {}
     }
   },
-  // watch: {
-  //   form: {
-  //     handler() {
-  //       setTimeout(()=>{
-  //         this.addElement();
-  //       },1000)
-  //     },
-  //     deep: true
-  //   }
-  // },
+  watch: {
+    // form: {
+    //   handler() {
+    //     setTimeout(() => {
+    //       this.addElement();
+    //     }, 1000)
+    //   },
+    //   deep: true
+    // }
+  },
   computed: {
     setContainerSize() {
-      return (size) => {
+      return (width, height) => {
         return {
-          width: size.split(',')[0] + 'px',
-          height: size.split(',')[1] + 'px',
+          width: width + 'px',
+          height: height + 'px',
         }
       }
     },
     setContainerPosition() {
-      return (position) => {
+      return (x, y) => {
         return {
-          top: (position.split(',')[0] || 0) + 'px',
-          left: (position.split(',')[1] || 0) + 'px',
+          top: x + 'px',
+          left: y + 'px',
         }
       }
     }
   },
   mounted() {
-    // document.onkeydown = (e) => {
-    //   switch (e.code) {
-    //       // 点击向上移动
-    //     case 'ArrowUp':
-    //       break;
-    //       // 点击向下移动
-    //     case 'ArrowDown':
-    //       break;
-    //       // 点击向左移动
-    //     case 'ArrowLeft':
-    //       break;
-    //       // 点击向右移动
-    //     case 'ArrowRight':
-    //       break;
-    //   }
-    //   console.log(e);
-    // }
-    this.addElement();
+    document.onkeydown = (e) => {
+      switch (e.code) {
+          // 点击向上移动
+        case 'ArrowUp':
+          break;
+          // 点击向下移动
+        case 'ArrowDown':
+          break;
+          // 点击向左移动
+        case 'ArrowLeft':
+          break;
+          // 点击向右移动
+        case 'ArrowRight':
+          break;
+      }
+      // console.log(e);
+    }
+    // this.addElement();
   },
   methods: {
+    addCardOne() {
+      let index = this.elementList.reduce((a, b) => {
+        return Math.max(a, b.index);
+      }, 0) + 1;
+      this.elementList.push({
+        width: 50,
+        height: 50,
+        depth: 50,
+        x: 0,
+        y: 0,
+        type: utils.setName(2, 6),
+        id: `index-${index}`,
+        index: index
+      })
+      this.boxForm = this.elementList[this.elementList.length - 1];
+    },
+    deleteCardOne() {
+      let findIndex = this.elementList.findIndex(item => item.index === this.boxForm.index);
+      this.elementList.splice(findIndex, 1);
+    },
+    resetBoxForm() {
+      let index = this.elementList.reduce((a, b) => {
+        return Math.max(a, b.index);
+      }, 0) + 1;
+      this.boxForm = {
+        width: 0,
+        height: 0,
+        depth: 0,
+        x: 0,
+        y: 0,
+        id: `index-${index}`,
+        index: index
+      }
+    },
+    setPositionLimit(position) {
+      console.log(position);
+    },
     choiceCLick(item) {
-      console.log(item);
+      this.boxForm = item;
     },
     // 鼠标拖拽
     draggableFun(item, event) {
@@ -269,7 +269,8 @@ export default {
         left = Math.max(left, 0);
         // 通过对象的存储机制直接修改事件传递进来的对象就会修改data里面的数据
         // 计算属性检测到position的属性发生改变就会动态改变当前盒子的坐标值
-        item.position = `${top},${left}`
+        item.x = top;
+        item.y = left;
       }
 
       div.onmousemove = (e) => {
@@ -312,25 +313,35 @@ export default {
         num: 0
       })
     },
+    setBoxForm() {
+      let findIndex = this.elementList.findIndex(item => item.index === this.boxForm.index);
+      this.$set(this.elementList, findIndex, this.boxForm);
+    },
     addElement() {
       let arr = [];
       this.form.card.forEach((item, index) => {
         for (let i = 0; i < item.num; i++) {
           arr.push({
-            id: `${index}-${i}`,
+            id: `index-${arr.length + 1}`,
             type: item.type,
-            position: '',
-            size: item.size,
+            x: item.x,
+            y: item.y,
+            width: item.width,
+            height: item.height,
+            depth: item.depth,
+            index: arr.length + 1
           })
         }
       })
       arr.forEach(item => {
         let findIndex = this.elementList.findIndex(findItem => findItem.id === item.id);
         if (findIndex !== -1) {
-          item.position = this.elementList[findIndex].position;
+          item.x = this.elementList[findIndex].x;
+          item.y = this.elementList[findIndex].y;
         }
       })
       this.elementList = arr;
+      // this.resetBoxForm();
     },
     sceneLoad() {
       let obj = {
@@ -338,7 +349,8 @@ export default {
         type: this.form.type,
         arr: this.elementList
       }
-      bus.$emit('setSlotList', obj);
+      // 防止浅拷贝出现的内容同步修改问题
+      bus.$emit('setSlotList', JSON.parse(JSON.stringify(obj)));
     },
     exportClick() {
       bus.$emit('operationExportGlb');
@@ -359,17 +371,27 @@ export default {
     height: 100%;
 
     .edit {
-      padding: 60px 20px 20px 20px;
+      padding: 20px;
+
+      .two {
+        padding: 20px;
+        border-top: 1px solid #999;
+      }
+    }
+
+    .el-main {
+      display: flex;
     }
 
     .drag-main {
-      height: 50%;
+      height: 100%;
+      width: 50%;
       overflow: auto;
 
       .container {
         //box-sizing: border-box;
-        height: 50%;
-        border: 1px solid red;
+        height: 100%;
+        border: 1px solid #409EFF;
         position: relative;
         overflow: auto;
 
@@ -384,11 +406,16 @@ export default {
           font-size: 24px;
           font-weight: bold;
         }
+
+        .is-active {
+          border-color: #ff0000;
+        }
       }
     }
 
     .disorder-three {
-      height: 50%;
+      width: 50%;
+      height: 100%;
     }
   }
 }

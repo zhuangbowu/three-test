@@ -38,14 +38,14 @@ export default {
     this.init();
     bus.$on('setSlotList', async (obj) => {
       // 先找到新增加的
+      this.chassis = {
+        size: obj.size,
+        type: obj.type,
+      };
+      await this.addGlbList([...obj.arr, this.chassis]);
+      // 加载glb模型
       if (this.slotList.length === 0) {
-        this.chassis = {
-          size: obj.size,
-          type: obj.type,
-        };
         this.slotList = obj.arr;
-        // 加载glb模型
-        await this.addGlbList([...this.slotList, this.chassis]);
         await this.sceneLoad();
       } else {
         if (this.chassis.size !== obj.size) {
@@ -78,11 +78,12 @@ export default {
         switch (true) {
           case this.slotList.length > obj.arr.length:
             let arr = this.slotList.filter(item => !obj.arr.some(ele => ele.id === item.id));
+            console.log(arr)
             scene.children.forEach(item => {
               if (item.userData.data) {
                 for (let i = item.children.length - 1; i >= 0; i--) {
                   const sonItem = item.children[i];
-                  let find = arr.findIndex(findItem => findItem.id === sonItem.userData.data.id);
+                  let find = arr.findIndex(findItem => findItem.id === sonItem.userData?.data?.id);
                   if (find !== -1) {
                     item.remove(sonItem);
                   }
@@ -104,7 +105,10 @@ export default {
                 y: item.position.split(',')[0] || 0,
                 z: 10
               }
-              cardElement.position.set(parseInt(cardPosition.x), -parseInt(cardPosition.y), cardPosition.z);
+              this.$nextTick(() => {
+                cardElement.position.set(parseInt(cardPosition.x), -parseInt(cardPosition.y), cardPosition.z);
+                this.render();
+              })
             })
             break;
         }
@@ -112,45 +116,48 @@ export default {
         // 这个地方需要对比每个模型的的大小、位置、型号如果发生改变的话进行重新绘制
         obj.arr.forEach(item => {
           let chassisElement = scene.children.find(findItem => findItem.userData.data);
-          console.log(chassisElement)
           let currentElement = chassisElement.children.find(findItem => findItem.userData?.data?.id === item.id);
-          if (currentElement.userData.data.size !== item.size) {
-            let newSize = {
-              width: item.size.split(',')[0],
-              height: item.size.split(',')[1],
-              depth: item.size.split(',')[2],
-            };
-            let usedSize = {
-              width: currentElement.userData.originalBox.max.x - currentElement.userData.originalBox.min.x,
-              height: currentElement.userData.originalBox.max.y - currentElement.userData.originalBox.min.y,
-              depth: currentElement.userData.originalBox.max.z - currentElement.userData.originalBox.min.z,
-            };
-            currentElement.scale.set(newSize.width / usedSize.width, newSize.height / usedSize.height, newSize.depth / usedSize.depth);
-            currentElement.userData.data.size = item.size;
-          }
-          if (currentElement.userData.data.position !== item.position) {
-            let cardPosition = {
-              x: item.position.split(',')[1] || 0,
-              y: item.position.split(',')[0] || 0,
-              z: 10
+          console.log(currentElement, item)
+          if (currentElement) {
+            if (currentElement?.userData?.data?.size !== item.size) {
+              let newSize = {
+                width: item.size.split(',')[0],
+                height: item.size.split(',')[1],
+                depth: item.size.split(',')[2],
+              };
+              let usedSize = {
+                width: currentElement.userData.originalBox.max.x - currentElement.userData.originalBox.min.x,
+                height: currentElement.userData.originalBox.max.y - currentElement.userData.originalBox.min.y,
+                depth: currentElement.userData.originalBox.max.z - currentElement.userData.originalBox.min.z,
+              };
+              currentElement.scale.set(newSize.width / usedSize.width, newSize.height / usedSize.height, newSize.depth / usedSize.depth);
+              currentElement.userData.data.size = item.size;
             }
-            currentElement.position.set(cardPosition.x, -cardPosition.y, cardPosition.z);
-            currentElement.userData.data.position = item.position;
-          }
-          if (currentElement.userData.data.type !== item.type) {
-            chassisElement.remove(currentElement);
-            let find = this.glbList.find(findItem => findItem.userData.type === item.type);
-            let cardElement = find.clone(true);
-            // 使用深拷贝防止和之前的数据还有关联
-            cardElement.userData.data = JSON.parse(JSON.stringify(item));
-            chassisElement.attach(cardElement);
-            let cardPosition = {
-              x: item.position.split(',')[1] || 0,
-              y: item.position.split(',')[0] || 0,
-              z: 10
+            if (currentElement?.userData?.data?.position !== item.position) {
+              let cardPosition = {
+                x: item.position.split(',')[1] || 0,
+                y: item.position.split(',')[0] || 0,
+                z: 10
+              }
+              currentElement.position.set(parseInt(cardPosition.x), -parseInt(cardPosition.y), cardPosition.z);
+              currentElement.userData.data.position = item.position;
             }
-            cardElement.position.set(parseInt(cardPosition.x), -parseInt(cardPosition.y), cardPosition.z);
+            if (currentElement?.userData?.data?.type !== item.type) {
+              chassisElement.remove(currentElement);
+              let find = this.glbList.find(findItem => findItem.userData.type === item.type);
+              let cardElement = find.clone(true);
+              // 使用深拷贝防止和之前的数据还有关联
+              cardElement.userData.data = JSON.parse(JSON.stringify(item));
+              chassisElement.attach(cardElement);
+              let cardPosition = {
+                x: item.position.split(',')[1] || 0,
+                y: item.position.split(',')[0] || 0,
+                z: 10
+              }
+              cardElement.position.set(parseInt(cardPosition.x), -parseInt(cardPosition.y), cardPosition.z);
+            }
           }
+
         })
         this.slotList = obj.arr;
         this.render();
@@ -187,6 +194,7 @@ export default {
       list.forEach(item => {
         let find2 = this.glbList.find(findItem => findItem.userData.type === item.type);
         let cardElement = find2.clone(true);
+        console.log(cardElement)
         // 使用深拷贝防止和之前的数据还有关联
         cardElement.userData.data = JSON.parse(JSON.stringify(item));
         chassisElement.attach(cardElement);
@@ -274,7 +282,7 @@ export default {
       let item = scene.children.find(item => item.userData.data);
       exporter.parse(item, (glb) => {
         console.log(glb)
-        // this.download(`${utils.setName()}.glb`, glb, 'application/octet-stream')
+        this.download(`${utils.setName()}.glb`, glb, 'application/octet-stream')
       }, (err) => {
         console.log(err)
       }, {

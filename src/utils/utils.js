@@ -207,7 +207,7 @@ let addElement = (width = 1, height = 1, depth = 1, color = '#409EFF') => {
                 let geometry = new THREE.BoxGeometry(width, height, depth); //创建一个立方体几何对象Geometry
                 let material = new THREE.MeshLambertMaterial({
                     color: '#ff0000',
-                    opacity: 0.3,
+                    opacity: 0,
                     transparent: true
                 }); //材质对象Material
                 let mesh = new THREE.Mesh(geometry, material); //网格模型对象Mesh
@@ -217,47 +217,35 @@ let addElement = (width = 1, height = 1, depth = 1, color = '#409EFF') => {
                 mesh.userData.originalBox = box;
 
 
+                let scene = gltf.scene;
                 let group = new THREE.Group();
-                group.name = '加载中';
-                console.log(gltf.scene)
+                scene.name = '加载中';
                 let arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 25, 26, 27, 28]
                 for (let i = gltf.scene.children.length - 1; i >= 0; i--) {
-                    const item = gltf.scene.children[i];
-                    if (arr.includes(i)) {
-                        group.attach(item);
+                    const item = scene.children[i];
+                    if (!arr.includes(i)) {
+                        // scene.remove(item);
                     } else {
-                        console.log('出问题的', item)
+                        group.attach(item);
                     }
 
                 }
-                // group.children.forEach(item => {
-                //     if (item.name === "Light" || item.name === "Camera" || item.isMesh) {
-                //         console.log(item)
-                //         group.remove(item);
-                //     }
-                // })
-                console.log(group)
-                // group.copy(gltf.scene);
-                // gltf.scene.traverse(obj => {
-                //     console.log(obj);
-                // })
-                let scene = group
                 let newSize = {
                     width: width,
                     height: height,
                     depth: depth,
                 };
-                let sceneBox = new THREE.Box3().expandByObject(scene);
+                let sceneBox = new THREE.Box3().expandByObject(group);
                 let usedSize = {
                     width: sceneBox.max.x - sceneBox.min.x,
                     height: sceneBox.max.y - sceneBox.min.y,
                     depth: sceneBox.max.z - sceneBox.min.z,
                 };
-
-                // scene.scale.set(newSize.width / usedSize.width, newSize.height / usedSize.height, newSize.depth / usedSize.depth);
-                // gltf.scene.position.set(width / 2, -(height / 2), -(depth / 2))
-                // mesh.attach(scene);
-                resolve(group)
+            console.log(group)
+                group.scale.set(newSize.width / usedSize.width, newSize.height / usedSize.height, newSize.depth / usedSize.depth);
+                group.position.set(width / 2, -(height / 2), -(depth / 2))
+                mesh.attach(group);
+                resolve(mesh)
             }, (xhr) => {
                 console.log((xhr.loaded / xhr.total * 100) + '% loaded');
             }, (e) => {
