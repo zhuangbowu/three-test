@@ -38,75 +38,52 @@ export default {
     this.init();
     bus.$on('setSlotList', async (obj) => {
       // 先找到新增加的
-      this.chassis = {
-        size: obj.size,
-        type: obj.type,
-      };
+      for (const objKey in obj) {
+        if (typeof obj[objKey] !== 'object') {
+          this.chassis[objKey] = obj[objKey]
+        }
+      }
       await this.addGlbList([...obj.arr, this.chassis]);
       // 加载glb模型
       if (this.slotList.length === 0) {
         this.slotList = obj.arr;
         await this.sceneLoad();
       } else {
-        if (this.chassis.size !== obj.size) {
-          let newSize = {
-            width: parseInt(obj.size.split(',')[0]),
-            height: parseInt(obj.size.split(',')[1]),
-            depth: parseInt(obj.size.split(',')[2]),
-          };
-          scene.children.forEach(item => {
-            if (item.userData.data) {
-              let usedSize = {
-                width: item.userData.originalBox.max.x - item.userData.originalBox.min.x,
-                height: item.userData.originalBox.max.y - item.userData.originalBox.min.y,
-                depth: item.userData.originalBox.max.z - item.userData.originalBox.min.z,
-              };
-              const group = new THREE.Group();
-              for (let i = item.children.length - 1; i >= 0; i--) {
-                if (item.children[i].userData.data) {
-                  group.attach(item.children[i]);
-                }
-              }
-              item.scale.set(newSize.width / usedSize.width, newSize.height / usedSize.height, newSize.depth / usedSize.depth);
-              for (let i = group.children.length - 1; i >= 0; i--) {
-                item.attach(group.children[i]);
-              }
-              this.chassis.size = obj.size;
-            }
-          })
-        }
+        let chassisElement = scene.children.find(item => item.userData.data);
+        let changeChassis = new utils.meshChange(chassisElement);
+        changeChassis.operationSize({
+          width: obj.width,
+          height: obj.height,
+          depth: obj.depth,
+        })
+
+        let arr = utils.contrastArr(obj.arr, this.slotList);
+        console.log(arr);
         switch (true) {
           case this.slotList.length > obj.arr.length:
-            let arr = this.slotList.filter(item => !obj.arr.some(ele => ele.id === item.id));
-            console.log(arr)
-            scene.children.forEach(item => {
-              if (item.userData.data) {
-                for (let i = item.children.length - 1; i >= 0; i--) {
-                  const sonItem = item.children[i];
-                  let find = arr.findIndex(findItem => findItem.id === sonItem.userData?.data?.id);
-                  if (find !== -1) {
-                    item.remove(sonItem);
-                  }
-                }
+            let removeArr = this.slotList.filter(item => !obj.arr.some(ele => ele.id === item.id));
+            for (let i = chassisElement.children.length - 1; i >= 0; i--) {
+              const sonItem = chassisElement.children[i];
+              let find = removeArr.findIndex(findItem => findItem.id === sonItem.userData?.data?.id);
+              if (find !== -1) {
+                chassisElement.remove(sonItem);
               }
-            })
+            }
             break;
           case this.slotList.length < obj.arr.length:
-            let arr2 = obj.arr.filter(item => !this.slotList.some(ele => ele.id === item.id));
-            arr2.forEach(item => {
+            let addArr = obj.arr.filter(item => !this.slotList.some(ele => ele.id === item.id));
+            addArr.forEach(item => {
               let find = this.glbList.find(findItem => findItem.userData.type === item.type);
               let cardElement = find.clone(true);
               cardElement.userData.data = JSON.parse(JSON.stringify(item));
-              let chassisElement = scene.children.find(filterItem => filterItem.userData.data);
               chassisElement.attach(cardElement);
-
-              let cardPosition = {
-                x: item.position.split(',')[1] || 0,
-                y: item.position.split(',')[0] || 0,
-                z: 10
-              }
+              let changeCard = new utils.meshChange(cardElement);
               this.$nextTick(() => {
-                cardElement.position.set(parseInt(cardPosition.x), -parseInt(cardPosition.y), cardPosition.z);
+                changeCard.operationPosition({
+                  x: item.x,
+                  y: item.y,
+                  z: 10,
+                })
                 this.render();
               })
             })
@@ -115,47 +92,36 @@ export default {
         // 没有增加也没有减少
         // 这个地方需要对比每个模型的的大小、位置、型号如果发生改变的话进行重新绘制
         obj.arr.forEach(item => {
-          let chassisElement = scene.children.find(findItem => findItem.userData.data);
           let currentElement = chassisElement.children.find(findItem => findItem.userData?.data?.id === item.id);
-          console.log(currentElement, item)
           if (currentElement) {
-            if (currentElement?.userData?.data?.size !== item.size) {
-              let newSize = {
-                width: item.size.split(',')[0],
-                height: item.size.split(',')[1],
-                depth: item.size.split(',')[2],
-              };
-              let usedSize = {
-                width: currentElement.userData.originalBox.max.x - currentElement.userData.originalBox.min.x,
-                height: currentElement.userData.originalBox.max.y - currentElement.userData.originalBox.min.y,
-                depth: currentElement.userData.originalBox.max.z - currentElement.userData.originalBox.min.z,
-              };
-              currentElement.scale.set(newSize.width / usedSize.width, newSize.height / usedSize.height, newSize.depth / usedSize.depth);
-              currentElement.userData.data.size = item.size;
-            }
-            if (currentElement?.userData?.data?.position !== item.position) {
-              let cardPosition = {
-                x: item.position.split(',')[1] || 0,
-                y: item.position.split(',')[0] || 0,
-                z: 10
-              }
-              currentElement.position.set(parseInt(cardPosition.x), -parseInt(cardPosition.y), cardPosition.z);
-              currentElement.userData.data.position = item.position;
-            }
-            if (currentElement?.userData?.data?.type !== item.type) {
-              chassisElement.remove(currentElement);
-              let find = this.glbList.find(findItem => findItem.userData.type === item.type);
-              let cardElement = find.clone(true);
-              // 使用深拷贝防止和之前的数据还有关联
-              cardElement.userData.data = JSON.parse(JSON.stringify(item));
-              chassisElement.attach(cardElement);
-              let cardPosition = {
-                x: item.position.split(',')[1] || 0,
-                y: item.position.split(',')[0] || 0,
-                z: 10
-              }
-              cardElement.position.set(parseInt(cardPosition.x), -parseInt(cardPosition.y), cardPosition.z);
-            }
+            let changeCurrent = new utils.meshChange(currentElement);
+            let newSize = {
+              width: item.width,
+              height: item.height,
+              depth: item.depth,
+            };
+            changeCurrent.operationSize(newSize);
+            changeCurrent.operationPosition({
+              x: item.x,
+              y: item.y,
+              z: 10,
+            })
+
+
+            // if (currentElement?.userData?.data?.type !== item.type) {
+            //   chassisElement.remove(currentElement);
+            //   let find = this.glbList.find(findItem => findItem.userData.type === item.type);
+            //   let cardElement = find.clone(true);
+            //   // 使用深拷贝防止和之前的数据还有关联
+            //   cardElement.userData.data = JSON.parse(JSON.stringify(item));
+            //   chassisElement.attach(cardElement);
+            //   let cardPosition = {
+            //     x: item.position.split(',')[1] || 0,
+            //     y: item.position.split(',')[0] || 0,
+            //     z: 10
+            //   }
+            //   cardElement.position.set(parseInt(cardPosition.x), -parseInt(cardPosition.y), cardPosition.z);
+            // }
           }
 
         })
@@ -194,54 +160,21 @@ export default {
       list.forEach(item => {
         let find2 = this.glbList.find(findItem => findItem.userData.type === item.type);
         let cardElement = find2.clone(true);
-        console.log(cardElement)
         // 使用深拷贝防止和之前的数据还有关联
         cardElement.userData.data = JSON.parse(JSON.stringify(item));
         chassisElement.attach(cardElement);
 
-        let cardPosition = {
-          x: item.position.split(',')[1] || 0,
-          y: item.position.split(',')[0] || 0,
-          z: 0
-        }
-
+        let changeCard = new utils.meshChange(cardElement);
         this.$nextTick(() => {
-          cardElement.position.set(parseInt(cardPosition.x), -parseInt(cardPosition.y), cardPosition.z);
+          changeCard.operationPosition({
+            x: item.x,
+            y: item.y,
+            z: 10,
+          })
           this.render();
         });
       })
-      console.log(scene)
       this.render();
-
-      // scene.remove.apply(scene, scene.children.filter(child => child.isMesh))
-      // let list = this.slotList;
-      // let size = {
-      //   width: this.size.split(',')[0],
-      //   height: this.size.split(',')[1],
-      //   depth: this.size.split(',')[2],
-      // };
-      // let chassisElement = utils.addElement(size.width, size.height, size.depth, '#409EFF');
-      // scene.add(chassisElement);
-      // list.forEach(item => {
-      //   let cardSize = {
-      //     width: item.size.split(',')[0],
-      //     height: item.size.split(',')[1],
-      //     depth: size.depth,
-      //   }
-      //   let cardPosition = {
-      //     x: item.position.split(',')[1] || 0,
-      //     y: item.position.split(',')[0] || 0,
-      //     z: 10
-      //   }
-      //   let cardElement = utils.addElement(cardSize.width, cardSize.height, cardSize.depth, '#F56C6C');
-      //   cardElement.name = item.id;
-      //   chassisElement.add(cardElement);
-      //   this.$nextTick(() => {
-      //     cardElement.position.set(parseInt(cardPosition.x), -parseInt(cardPosition.y), cardPosition.z);
-      //     this.render();
-      //   });
-      // })
-      // this.render();
     },
     // 加载glb文件模型，暂时无glb文件模型，所以改用动态创建的立方体代替
     // 传入数据列表然后提取出来类型进行去重
@@ -267,12 +200,7 @@ export default {
     },
     // 增加
     async addGlb(item) {
-      let size = {
-        width: item.size.split(',')[0],
-        height: item.size.split(',')[1],
-        depth: item.size.split(',')[2],
-      };
-      let element = await utils.addElement(parseInt(size.width), parseInt(size.height), parseInt(size.depth), '#409EFF');
+      let element = await utils.addElement(item.width, item.height, item.depth, '#409EFF');
       element.userData.type = item.type;
       return element;
     },
@@ -338,9 +266,13 @@ export default {
       /**
        * 光源设置
        */
-      point = new THREE.PointLight(0xffffff);
-      point.position.set(10, 10, 5000); //点光源位置
-      scene.add(point); //点光源添加到场景中
+      for (let i = 0; i < 6; i++) {
+        let arr = [0, 0, 0];
+        arr[i % 3] = 2000;
+        let point = new THREE.PointLight(0xffffff);
+        point.position.set(arr[0], arr[1], arr[2]); //点光源位置
+        scene.add(point); //点光源添加到场景中
+      }
       /**
        * 环境光设置
        */

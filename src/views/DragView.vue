@@ -4,7 +4,8 @@
       <el-main>
         <!-- 3D拖拽容器 -->
         <div class="drag-main">
-          <div class="container" :style="setContainerSize(form.width,form.height)">
+          <div class="container" :class="{'is-active':form.index===boxForm.index}"
+               @click.stop="choiceCLick(form)" :style="setContainerSize(form.width,form.height)">
             <div class="item"
                  :class="{'is-active':item.index===boxForm.index}"
                  @click.stop="choiceCLick(item)"
@@ -35,6 +36,7 @@
                         aria-placeholder="填写数字中间以逗号隔开"></el-input>
             </el-form-item>
             <div class="two" v-for="(item,index) in form.card" :key="index">
+              <hr>
               <el-form-item label="板卡宽度">
                 <el-input type="number" min="1" v-model="item.width" @blur="addElement"
                           aria-placeholder="填写数字中间以逗号隔开"></el-input>
@@ -55,6 +57,9 @@
                 <el-input type="number" min="0" v-model="item.y" @blur="addElement"
                           aria-placeholder="填写数字中间以逗号隔开"></el-input>
               </el-form-item>
+              <el-form-item label="板卡类型">
+                <el-input type="text" v-model="item.type" @blur="addElement" aria-placeholder="填写数字"></el-input>
+              </el-form-item>
               <el-form-item label="板卡数量">
                 <el-input type="text" v-model="item.num" @blur="addElement" aria-placeholder="填写数字"></el-input>
               </el-form-item>
@@ -65,37 +70,41 @@
 
 
           <el-form ref="form" :model="boxForm" label-width="120px" @submit.native.prevent v-else>
-            <el-form-item label="板卡宽度">
+            <el-form-item label="宽度">
               <el-input type="number" min="1" v-model="boxForm.width"
                         aria-placeholder="填写数字中间以逗号隔开"></el-input>
             </el-form-item>
-            <el-form-item label="板卡高度">
+            <el-form-item label="高度">
               <el-input type="number" min="1" v-model="boxForm.height"
                         aria-placeholder="填写数字中间以逗号隔开"></el-input>
             </el-form-item>
-            <el-form-item label="板卡深度">
+            <el-form-item label="深度">
               <el-input type="number" min="1" v-model="boxForm.depth"
                         aria-placeholder="填写数字中间以逗号隔开"></el-input>
             </el-form-item>
-            <el-form-item label="板卡x轴">
-              <el-input type="number" min="0" v-model="boxForm.x"
-                        aria-placeholder="填写数字中间以逗号隔开"></el-input>
-            </el-form-item>
-            <el-form-item label="板卡y轴">
-              <el-input type="number" min="0" v-model="boxForm.y"
-                        aria-placeholder="填写数字中间以逗号隔开"></el-input>
-            </el-form-item>
-            <el-form-item label="板卡类型">
+            <template v-if="boxForm.index!==-1">
+              <el-form-item label="x轴">
+                <el-input type="number" min="0" v-model="boxForm.x"
+                          aria-placeholder="填写数字中间以逗号隔开"></el-input>
+              </el-form-item>
+              <el-form-item label="y轴">
+                <el-input type="number" min="0" v-model="boxForm.y"
+                          aria-placeholder="填写数字中间以逗号隔开"></el-input>
+              </el-form-item>
+              <el-form-item label="序列">
+                <el-input type="text" v-model="boxForm.index"
+                          aria-placeholder="填写数字中间以逗号隔开"></el-input>
+              </el-form-item>
+            </template>
+
+            <el-form-item label="类型">
               <el-input type="text" v-model="boxForm.type"
-                        aria-placeholder="填写数字中间以逗号隔开"></el-input>
-            </el-form-item>
-            <el-form-item label="板卡序列">
-              <el-input type="text" v-model="boxForm.index"
                         aria-placeholder="填写数字中间以逗号隔开"></el-input>
             </el-form-item>
             <el-button type="primary" @click.stop="addCardOne">新增板卡</el-button>
             <el-button type="primary" @click.stop="deleteCardOne">删除板卡</el-button>
           </el-form>
+          <hr>
           <el-button type="primary" @click.stop="sceneLoad">立即渲染</el-button>
           <el-button type="primary" @click.stop="exportClick">导出</el-button>
         </div>
@@ -124,9 +133,8 @@ export default {
         width: 442,
         height: 1420,
         depth: 650,
-
-        size: '442,1420,650',
         type: utils.setName(2, 6),
+        index: -1,
         card: [
           {
             type: utils.setName(2, 6),
@@ -135,7 +143,7 @@ export default {
             depth: 20,
             x: 0,
             y: 0,
-            num: 18
+            num: 18,
           },
           {
             type: utils.setName(2, 6),
@@ -173,31 +181,40 @@ export default {
     setContainerPosition() {
       return (x, y) => {
         return {
-          top: x + 'px',
-          left: y + 'px',
+          top: y + 'px',
+          left: x + 'px',
         }
       }
     }
   },
   mounted() {
-    document.onkeydown = (e) => {
-      switch (e.code) {
-          // 点击向上移动
-        case 'ArrowUp':
-          break;
-          // 点击向下移动
-        case 'ArrowDown':
-          break;
-          // 点击向左移动
-        case 'ArrowLeft':
-          break;
-          // 点击向右移动
-        case 'ArrowRight':
-          break;
-      }
-      // console.log(e);
-    }
-    // this.addElement();
+    // document.onkeydown = (event) => {
+    //   if (this.boxForm.id !== '') {
+    //     let limit = new utils.setBoxFormLimit(this.form, this.boxForm);
+    //     switch (event.code) {
+    //         // 点击向上移动
+    //       case 'ArrowUp':
+    //         event.preventDefault();
+    //         this.boxForm.x = limit.setPositionXLimit(--this.boxForm.x);
+    //         break;
+    //         // 点击向下移动
+    //       case 'ArrowDown':
+    //         event.preventDefault();
+    //         this.boxForm.x = limit.setPositionXLimit(++this.boxForm.x);
+    //         break;
+    //         // 点击向左移动
+    //       case 'ArrowLeft':
+    //         event.preventDefault();
+    //         this.boxForm.y = limit.setPositionYLimit(--this.boxForm.y);
+    //         break;
+    //         // 点击向右移动
+    //       case 'ArrowRight':
+    //         event.preventDefault();
+    //         this.boxForm.y = limit.setPositionYLimit(++this.boxForm.y);
+    //         break;
+    //     }
+    //   }
+    // }
   },
   methods: {
     addCardOne() {
@@ -230,47 +247,89 @@ export default {
         depth: 0,
         x: 0,
         y: 0,
-        id: `index-${index}`,
+        id: '',
         index: index
       }
     },
-    setPositionLimit(position) {
-      console.log(position);
-    },
     choiceCLick(item) {
       this.boxForm = item;
+    },
+    addCard() {
+      this.form.card.push({
+        type: utils.setName(2, 6),
+        width: 420,
+        height: 48,
+        depth: 20,
+        x: 0,
+        y: 0,
+        num: 4
+      })
+    },
+    addElement() {
+      let arr = [];
+      this.form.card.forEach((item, index) => {
+        for (let i = 0; i < item.num; i++) {
+          arr.push({
+            id: `index-${arr.length + 1}`,
+            type: item.type,
+            x: item.x,
+            y: item.y,
+            width: item.width,
+            height: item.height,
+            depth: item.depth,
+            index: arr.length + 1
+          })
+        }
+      })
+      arr.forEach(item => {
+        let findIndex = this.elementList.findIndex(findItem => findItem.id === item.id);
+        if (findIndex !== -1) {
+          item.x = this.elementList[findIndex].x;
+          item.y = this.elementList[findIndex].y;
+        }
+      })
+      this.elementList = arr;
+      this.resetBoxForm();
+    },
+    // 渲染三维视图
+    sceneLoad() {
+      let boxObj = {};
+      for (const objKey in this.form) {
+        if (typeof this.form[objKey] !== 'object') {
+          boxObj[objKey] = this.form[objKey]
+        }
+      }
+      boxObj.arr = JSON.parse(JSON.stringify(this.elementList));
+      console.log(boxObj)
+      // 防止浅拷贝出现的内容同步修改问题
+      bus.$emit('setSlotList', JSON.parse(JSON.stringify(boxObj)));
+    },
+    // 导出模型
+    exportClick() {
+      bus.$emit('operationExportGlb');
     },
     // 鼠标拖拽
     draggableFun(item, event) {
       let div = event.target;
       // 触发事件之后修改鼠标为移动状态
       div.style.cursor = 'move';
-      // 获取父级元素的宽高
-      let docWidth = div.parentNode.clientWidth;
-      let docHeight = div.parentNode.clientHeight;
       // 通过鼠标当前在页面的位置和当前元素距离父级的距离计算差值
       let disX = event.pageX - div.offsetLeft;
       let disY = event.pageY - div.offsetTop;
-      let left = '';
-      let top = '';
       // 鼠标按下改为true开始监听鼠标移动
       let isDrag = true;
 
+      let limit = new utils.setBoxFormLimit(this.form, {
+        width: div.offsetWidth,
+        height: div.offsetHeight,
+      });
+
       // 根据鼠标位置，当前元素，父级元素，计算当前div应该在什么位置
       let calculationPosition = (e) => {
-        left = e.clientX - disX;
-        // top的值如果大于父级的高-当前div的高那么就取最小值
-        top = Math.min(e.clientY - disY, docHeight - div.offsetHeight);
-        // top和0之间取最大值
-        top = Math.max(top, 0);
-        // left的值如果大于父级的宽-当前div的宽那么就取最小值
-        left = Math.min(e.clientX - disX, docWidth - div.offsetWidth);
-        // left和0之间取最大值
-        left = Math.max(left, 0);
         // 通过对象的存储机制直接修改事件传递进来的对象就会修改data里面的数据
         // 计算属性检测到position的属性发生改变就会动态改变当前盒子的坐标值
-        item.x = top;
-        item.y = left;
+        item.x = limit.setPositionXLimit(e.clientX - disX);
+        item.y = limit.setPositionYLimit(e.clientY - disY);
       }
 
       div.onmousemove = (e) => {
@@ -305,56 +364,6 @@ export default {
         isDrag = false;
       };
     },
-    addCard() {
-      this.form.card.push({
-        size: '0,0,0',
-        position: '0,0',
-        type: utils.setName(2, 6),
-        num: 0
-      })
-    },
-    setBoxForm() {
-      let findIndex = this.elementList.findIndex(item => item.index === this.boxForm.index);
-      this.$set(this.elementList, findIndex, this.boxForm);
-    },
-    addElement() {
-      let arr = [];
-      this.form.card.forEach((item, index) => {
-        for (let i = 0; i < item.num; i++) {
-          arr.push({
-            id: `index-${arr.length + 1}`,
-            type: item.type,
-            x: item.x,
-            y: item.y,
-            width: item.width,
-            height: item.height,
-            depth: item.depth,
-            index: arr.length + 1
-          })
-        }
-      })
-      arr.forEach(item => {
-        let findIndex = this.elementList.findIndex(findItem => findItem.id === item.id);
-        if (findIndex !== -1) {
-          item.x = this.elementList[findIndex].x;
-          item.y = this.elementList[findIndex].y;
-        }
-      })
-      this.elementList = arr;
-      // this.resetBoxForm();
-    },
-    sceneLoad() {
-      let obj = {
-        size: this.form.size,
-        type: this.form.type,
-        arr: this.elementList
-      }
-      // 防止浅拷贝出现的内容同步修改问题
-      bus.$emit('setSlotList', JSON.parse(JSON.stringify(obj)));
-    },
-    exportClick() {
-      bus.$emit('operationExportGlb');
-    }
   },
   beforeDestroy() {
 
@@ -375,7 +384,6 @@ export default {
 
       .two {
         padding: 20px;
-        border-top: 1px solid #999;
       }
     }
 
@@ -406,12 +414,16 @@ export default {
           font-size: 24px;
           font-weight: bold;
         }
-
         .is-active {
           border-color: #ff0000;
         }
       }
+
+      .is-active {
+        border-color: #ff0000;
+      }
     }
+
 
     .disorder-three {
       width: 50%;

@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import {DRACOLoader} from "three/examples/jsm/loaders/DRACOLoader";
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader";
 import {LoadingManager} from "three";
+import fa from "element-ui/src/locale/lang/fa";
 
 function Throttle(fn, delay = 200) {
     let open = true;
@@ -192,6 +193,66 @@ class calculationPositionSize {
     }
 }
 
+class meshChange {
+    constructor(mesh) {
+        this.mesh = mesh;
+    }
+
+    operationSize(size) {
+        for (const sizeKey in size) {
+            this.#formatNumber(size[sizeKey]);
+        }
+        let usedSize = {
+            width: this.mesh.userData.originalBox.max.x - this.mesh.userData.originalBox.min.x,
+            height: this.mesh.userData.originalBox.max.y - this.mesh.userData.originalBox.min.y,
+            depth: this.mesh.userData.originalBox.max.z - this.mesh.userData.originalBox.min.z,
+        };
+        // 是否需要修改
+        let changeType = false;
+        for (const usedSizeKey in usedSize) {
+            // 宽高深，任何一项不一致都会触发修改
+            if (usedSize[usedSizeKey] !== size[usedSizeKey]) {
+                changeType = true;
+            }
+        }
+        if (changeType) {
+            const group = new THREE.Group();
+            for (let i = this.mesh.children.length - 1; i >= 0; i--) {
+                if (this.mesh.children[i].userData.data) {
+                    group.attach(this.mesh.children[i]);
+                }
+            }
+            this.mesh.scale.set(size.width / usedSize.width, size.height / usedSize.height, size.depth / usedSize.depth);
+            for (let i = group.children.length - 1; i >= 0; i--) {
+                this.mesh.attach(group.children[i]);
+            }
+        }
+    }
+
+    operationPosition(position) {
+        for (const sizeKey in position) {
+            this.#formatNumber(position[sizeKey]);
+        }
+        let usedPosition = this.mesh.position;
+        let changeType = false;
+        for (const usedPositionKey in usedPosition) {
+            // 宽高深，任何一项不一致都会触发修改
+            if (Math.abs(usedPosition[usedPositionKey]) !== Math.abs(position[usedPositionKey])) {
+                changeType = true;
+            }
+        }
+        if (changeType) {
+            this.mesh.position.set(position.x, -position.y, position.z);
+        }
+    }
+
+    #formatNumber(num) {
+        if (typeof num === 'string') {
+            num = parseInt(num)
+        }
+    }
+}
+
 
 // 创建一个空板卡
 let addElement = (width = 1, height = 1, depth = 1, color = '#409EFF') => {
@@ -204,23 +265,25 @@ let addElement = (width = 1, height = 1, depth = 1, color = '#409EFF') => {
         // GLTF loader
         gltfLoader.setDRACOLoader(dracoLoader);   //gltfloader使用dracoLoader
         gltfLoader.load(`static/glb/demo.glb`, (gltf) => {
-                let geometry = new THREE.BoxGeometry(width, height, depth); //创建一个立方体几何对象Geometry
+                //创建一个立方体几何对象Geometry
+                let geometry = new THREE.BoxGeometry(width, height, depth);
+                // 添加一个透明的材质
                 let material = new THREE.MeshLambertMaterial({
                     color: '#ff0000',
                     opacity: 0,
                     transparent: true
-                }); //材质对象Material
-                let mesh = new THREE.Mesh(geometry, material); //网格模型对象Mesh
+                });
+                // 放到网格模型对象Mesh
+                let mesh = new THREE.Mesh(geometry, material);
                 // 改变定点位置从右上前开始计算坐标值的位置
                 mesh.geometry.translate(width / 2, -(height / 2), -(depth / 2));
-                let box = new THREE.Box3().expandByObject(mesh);
-                mesh.userData.originalBox = box;
-
-
+                // 把模型的原始宽高深数据存起来、以后的缩放都需要这个数据进行
+                mesh.userData.originalBox = new THREE.Box3().expandByObject(mesh);
+                // 创建一个新的组对象
                 let scene = gltf.scene;
                 let group = new THREE.Group();
-                scene.name = '加载中';
-                let arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 25, 26, 27, 28]
+                let arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 25, 26, 27, 28];
+                // 把模型文件里面的东西依次从后向前剪切到组对象里面
                 for (let i = gltf.scene.children.length - 1; i >= 0; i--) {
                     const item = scene.children[i];
                     if (!arr.includes(i)) {
@@ -230,20 +293,19 @@ let addElement = (width = 1, height = 1, depth = 1, color = '#409EFF') => {
                     }
 
                 }
-                let newSize = {
+
+                group.userData.originalBox = new THREE.Box3().expandByObject(group);
+                let changeGroup = new meshChange(group);
+                changeGroup.operationSize({
                     width: width,
                     height: height,
                     depth: depth,
-                };
-                let sceneBox = new THREE.Box3().expandByObject(group);
-                let usedSize = {
-                    width: sceneBox.max.x - sceneBox.min.x,
-                    height: sceneBox.max.y - sceneBox.min.y,
-                    depth: sceneBox.max.z - sceneBox.min.z,
-                };
-            console.log(group)
-                group.scale.set(newSize.width / usedSize.width, newSize.height / usedSize.height, newSize.depth / usedSize.depth);
-                group.position.set(width / 2, -(height / 2), -(depth / 2))
+                });
+                changeGroup.operationPosition({
+                    x: width / 2,
+                    y: height / 2,
+                    z: -(depth / 2),
+                })
                 mesh.attach(group);
                 resolve(mesh)
             }, (xhr) => {
@@ -253,22 +315,8 @@ let addElement = (width = 1, height = 1, depth = 1, color = '#409EFF') => {
             }
         )
     })
-
-
-    // let parameters = {
-    //     color: color
-    // }
-    // let geometry = new THREE.BoxGeometry(width, height, depth); //创建一个立方体几何对象Geometry
-    // let material = new THREE.MeshLambertMaterial({
-    //     ...parameters,
-    //     // opacity: 0.5,
-    //     // transparent: true
-    // }); //材质对象Material
-    // let mesh = new THREE.Mesh(geometry, material); //网格模型对象Mesh
-    // // 改变定点位置从右上前开始计算坐标值的位置
-    // mesh.geometry.translate(width / 2, -(height / 2), -(depth / 2));
-    // return mesh;
 }
+
 // 创建一个占位符
 let addGroupElement = (width = 1, height = 1, depth = 1) => {
     let parameters = {
@@ -286,6 +334,68 @@ let addGroupElement = (width = 1, height = 1, depth = 1) => {
     return mesh;
 }
 
+class setBoxFormLimit {
+    constructor(father, son) {
+        this.father = father;
+        this.son = son;
+    }
+
+    setSizeWidthLimit(width) {
+        return Math.min(width, this.father.width)
+    }
+
+    setSizeHeightLimit(height) {
+        return Math.min(height, this.father.height)
+    }
+
+    setSizeDepthLimit(depth) {
+        return Math.min(depth, this.father.depth)
+    }
+
+    setPositionXLimit(x) {
+        // top的值如果大于父级的高-当前div的高那么就取最小值
+        x = Math.min(x, this.father.width - this.son.width);
+        // top和0之间取最大值
+        x = Math.max(x, 0);
+        return x;
+    }
+
+    setPositionYLimit(y) {
+        // top的值如果大于父级的高-当前div的高那么就取最小值
+        y = Math.min(y, this.father.height - this.son.height);
+        // top和0之间取最大值
+        y = Math.max(y, 0);
+        return y;
+    }
+}
+
+const contrastArr = (newArr, usedArr) => {
+    let arr = [];
+    newArr.forEach(item => {
+        let findIndex = usedArr.findIndex(findItem => findItem.index === item.index);
+        if (findIndex === -1) {
+            arr.push({
+                ...item,
+                state: 'add'
+            })
+        } else {
+            arr.push({
+                ...item,
+                state: 'set'
+            })
+        }
+    })
+    usedArr.forEach(item => {
+        let findIndex = newArr.findIndex(findItem => findItem.index === item.index);
+        if (findIndex === -1) {
+            arr.push({
+                ...item,
+                state: 'delete'
+            })
+        }
+    })
+    console.log(arr)
+}
 export default {
     Throttle,
     getRandomNum,
@@ -294,4 +404,7 @@ export default {
     formatArray,
     addElement,
     addGroupElement,
+    setBoxFormLimit,
+    meshChange,
+    contrastArr
 }
