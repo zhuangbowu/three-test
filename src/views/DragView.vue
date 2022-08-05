@@ -24,44 +24,44 @@
         <div class="edit" @click.stop="">
           <el-form ref="form" :model="form" label-width="120px" @submit.native.prevent v-if="elementList.length===0">
             <el-form-item label="机框宽度">
-              <el-input type="number" min="1" v-model="form.width" @blur="addElement"
+              <el-input type="number" min="1" v-model="form.width"
                         aria-placeholder="填写数字中间以逗号隔开"></el-input>
             </el-form-item>
             <el-form-item label="机框高度">
-              <el-input type="number" min="1" v-model="form.height" @blur="addElement"
+              <el-input type="number" min="1" v-model="form.height"
                         aria-placeholder="填写数字中间以逗号隔开"></el-input>
             </el-form-item>
             <el-form-item label="机框深度">
-              <el-input type="number" min="1" v-model="form.depth" @blur="addElement"
+              <el-input type="number" min="1" v-model="form.depth"
                         aria-placeholder="填写数字中间以逗号隔开"></el-input>
             </el-form-item>
             <div class="two" v-for="(item,index) in form.card" :key="index">
               <hr>
               <el-form-item label="板卡宽度">
-                <el-input type="number" min="1" v-model="item.width" @blur="addElement"
+                <el-input type="number" min="1" v-model="item.width"
                           aria-placeholder="填写数字中间以逗号隔开"></el-input>
               </el-form-item>
               <el-form-item label="板卡高度">
-                <el-input type="number" min="1" v-model="item.height" @blur="addElement"
+                <el-input type="number" min="1" v-model="item.height"
                           aria-placeholder="填写数字中间以逗号隔开"></el-input>
               </el-form-item>
               <el-form-item label="板卡深度">
-                <el-input type="number" min="1" v-model="item.depth" @blur="addElement"
+                <el-input type="number" min="1" v-model="item.depth"
                           aria-placeholder="填写数字中间以逗号隔开"></el-input>
               </el-form-item>
               <el-form-item label="板卡x轴">
-                <el-input type="number" min="0" v-model="item.x" @blur="addElement"
+                <el-input type="number" min="0" v-model="item.x"
                           aria-placeholder="填写数字中间以逗号隔开"></el-input>
               </el-form-item>
               <el-form-item label="板卡y轴">
-                <el-input type="number" min="0" v-model="item.y" @blur="addElement"
+                <el-input type="number" min="0" v-model="item.y"
                           aria-placeholder="填写数字中间以逗号隔开"></el-input>
               </el-form-item>
               <el-form-item label="板卡类型">
-                <el-input type="text" v-model="item.type" @blur="addElement" aria-placeholder="填写数字"></el-input>
+                <el-input type="text" v-model="item.type" aria-placeholder="填写数字"></el-input>
               </el-form-item>
               <el-form-item label="板卡数量">
-                <el-input type="text" v-model="item.num" @blur="addElement" aria-placeholder="填写数字"></el-input>
+                <el-input type="text" v-model="item.num" aria-placeholder="填写数字"></el-input>
               </el-form-item>
             </div>
             <el-button type="primary" @click.stop="addCard">增加板卡类型</el-button>
@@ -133,11 +133,11 @@ export default {
         width: 442,
         height: 1420,
         depth: 650,
-        type: utils.setName(2, 6),
+        type: "up66ReoiDeSn",
         index: -1,
         card: [
           {
-            type: utils.setName(2, 6),
+            type: "YYydV0x5Rrwt",
             width: 36,
             height: 580,
             depth: 20,
@@ -146,7 +146,7 @@ export default {
             num: 18,
           },
           {
-            type: utils.setName(2, 6),
+            type: "YhqeaVCrvLzJ",
             width: 420,
             height: 48,
             depth: 20,
@@ -228,7 +228,7 @@ export default {
         x: 0,
         y: 0,
         type: utils.setName(2, 6),
-        id: `index-${index}`,
+        id: `index-${ index }`,
         index: index
       })
       this.boxForm = this.elementList[this.elementList.length - 1];
@@ -270,7 +270,7 @@ export default {
       this.form.card.forEach((item, index) => {
         for (let i = 0; i < item.num; i++) {
           arr.push({
-            id: `index-${arr.length + 1}`,
+            id: `index-${ arr.length + 1 }`,
             type: item.type,
             x: item.x,
             y: item.y,
@@ -300,7 +300,6 @@ export default {
         }
       }
       boxObj.arr = JSON.parse(JSON.stringify(this.elementList));
-      console.log(boxObj)
       // 防止浅拷贝出现的内容同步修改问题
       bus.$emit('setSlotList', JSON.parse(JSON.stringify(boxObj)));
     },
@@ -414,6 +413,7 @@ export default {
           font-size: 24px;
           font-weight: bold;
         }
+
         .is-active {
           border-color: #ff0000;
         }

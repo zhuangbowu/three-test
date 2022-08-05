@@ -6,10 +6,10 @@
 
 <script>
 import * as THREE from 'three'
-import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import utils from "@/utils/utils";
 import bus from "@/utils/bus";
-import {GLTFExporter} from "three/examples/jsm/exporters/GLTFExporter";
+import { GLTFExporter } from "three/examples/jsm/exporters/GLTFExporter";
 
 // 场景对象Scene
 let scene = null;
@@ -31,21 +31,24 @@ export default {
       size: '',
       slotList: [],
       // 用于遍历然后存储已加载的glb文件
-      glbList: []
+      glbList: [],
+      num: 0
     }
   },
   mounted() {
     this.init();
     bus.$on('setSlotList', async (obj) => {
+      console.log(obj)
       // 先找到新增加的
       for (const objKey in obj) {
         if (typeof obj[objKey] !== 'object') {
           this.chassis[objKey] = obj[objKey]
         }
       }
-      await this.addGlbList([...obj.arr, this.chassis]);
+      await this.addGlbList([ ...obj.arr, this.chassis ]);
       // 加载glb模型
-      if (this.slotList.length === 0) {
+      if (this.num === 0) {
+        this.num++;
         this.slotList = obj.arr;
         await this.sceneLoad();
       } else {
@@ -57,8 +60,8 @@ export default {
           depth: obj.depth,
         })
 
-        let arr = utils.contrastArr(obj.arr, this.slotList);
-        console.log(arr);
+        // let arr = utils.contrastArr(obj.arr, this.slotList);
+        // console.log(arr);
         switch (true) {
           case this.slotList.length > obj.arr.length:
             let removeArr = this.slotList.filter(item => !obj.arr.some(ele => ele.id === item.id));
@@ -82,17 +85,20 @@ export default {
                 changeCard.operationPosition({
                   x: item.x,
                   y: item.y,
-                  z: 10,
-                })
+                  z: -10,
+                },chassisElement)
                 this.render();
               })
             })
             break;
         }
+        console.log(333333333333333)
+        console.log(obj.arr)
+        console.log(chassisElement)
         // 没有增加也没有减少
         // 这个地方需要对比每个模型的的大小、位置、型号如果发生改变的话进行重新绘制
         obj.arr.forEach(item => {
-          let currentElement = chassisElement.children.find(findItem => findItem.userData?.data?.id === item.id);
+          let currentElement = scene.children.find(findItem => findItem.userData?.data?.id === item.id);
           if (currentElement) {
             let changeCurrent = new utils.meshChange(currentElement);
             let newSize = {
@@ -104,8 +110,8 @@ export default {
             changeCurrent.operationPosition({
               x: item.x,
               y: item.y,
-              z: 10,
-            })
+              z: -10,
+            },chassisElement)
 
 
             // if (currentElement?.userData?.data?.type !== item.type) {
@@ -156,24 +162,25 @@ export default {
       let chassisElement = find.clone(true);
       // 使用深拷贝防止和之前的数据还有关联
       chassisElement.userData.data = JSON.parse(JSON.stringify(this.chassis));
+      // chassisElement.visible = false;
       scene.add(chassisElement);
       list.forEach(item => {
         let find2 = this.glbList.find(findItem => findItem.userData.type === item.type);
         let cardElement = find2.clone(true);
+        console.log('cardElement',cardElement)
         // 使用深拷贝防止和之前的数据还有关联
         cardElement.userData.data = JSON.parse(JSON.stringify(item));
-        chassisElement.attach(cardElement);
+        scene.attach(cardElement);
 
         let changeCard = new utils.meshChange(cardElement);
-        this.$nextTick(() => {
-          changeCard.operationPosition({
-            x: item.x,
-            y: item.y,
-            z: 10,
-          })
-          this.render();
-        });
+        changeCard.operationPosition({
+          x: item.x,
+          y: item.y,
+          z: -200,
+        }, chassisElement)
       })
+
+      console.log(scene)
       this.render();
     },
     // 加载glb文件模型，暂时无glb文件模型，所以改用动态创建的立方体代替
@@ -196,26 +203,37 @@ export default {
         glbArr.push(element);
       }
       console.timeEnd()
-      this.glbList = [...this.glbList, ...glbArr];
+      this.glbList = [ ...this.glbList, ...glbArr ];
     },
     // 增加
     async addGlb(item) {
-      let element = await utils.addElement(item.width, item.height, item.depth, '#409EFF');
+      let color = '#ff0000';
+      switch (item.type) {
+        case "up66ReoiDeSn":
+          break;
+        case "YYydV0x5Rrwt":
+          color = '#ff0000';
+          break;
+        case "YhqeaVCrvLzJ":
+          color = '#ff0000';
+          break;
+      }
+      let element = await utils.addElement(item.width, item.height, item.depth, color);
       element.userData.type = item.type;
       return element;
     },
 
     exportGlb() {
       const exporter = new GLTFExporter();
-      let item = scene.children.find(item => item.userData.data);
+      let item = scene.children.filter(item => item.userData.data);
       exporter.parse(item, (glb) => {
         console.log(glb)
-        this.download(`${utils.setName()}.glb`, glb, 'application/octet-stream')
+        this.download(`${ utils.setName() }.glb`, glb, 'application/octet-stream')
       }, (err) => {
         console.log(err)
       }, {
         binary: true,
-        trishape: true,
+        trs: true
       })
     },
     download(filename, text, type = "text/plain") {
@@ -226,7 +244,7 @@ export default {
 
       // Set the HREF to a Blob representation of the data to be downloaded
       a.href = window.URL.createObjectURL(
-          new Blob([text], {type})
+          new Blob([ text ], { type })
       );
 
       // Use download attribute to set set desired file name
@@ -253,8 +271,8 @@ export default {
       // 正投影相机
       // camera = new THREE.OrthographicCamera(-s * k, s * k, s, -s, 1, 1000);
       // 透视投影相机（人眼模式、近大远小）
-      camera = new THREE.PerspectiveCamera(70, width / height, 0.1, 10000);
-      camera.position.set(0, 0, 3000); //设置相机位置
+      camera = new THREE.PerspectiveCamera(70, width / height, 0.1, 10000000);
+      camera.position.set(0, 0, -3000); //设置相机位置
       camera.lookAt(scene.position); //设置相机方向(指向的场景对象)
       /**
        * 创建渲染器对象
@@ -266,13 +284,9 @@ export default {
       /**
        * 光源设置
        */
-      for (let i = 0; i < 6; i++) {
-        let arr = [0, 0, 0];
-        arr[i % 3] = 2000;
-        let point = new THREE.PointLight(0xffffff);
-        point.position.set(arr[0], arr[1], arr[2]); //点光源位置
-        scene.add(point); //点光源添加到场景中
-      }
+      let point = new THREE.PointLight(0xffffff);
+      point.position.set(20, 20, -1000); //点光源位置
+      scene.add(point); //点光源添加到场景中
       /**
        * 环境光设置
        */

@@ -1,7 +1,7 @@
 import * as THREE from 'three'
-import {DRACOLoader} from "three/examples/jsm/loaders/DRACOLoader";
-import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader";
-import {LoadingManager} from "three";
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import { LoadingManager } from "three";
 import fa from "element-ui/src/locale/lang/fa";
 
 function Throttle(fn, delay = 200) {
@@ -196,22 +196,22 @@ class calculationPositionSize {
 class meshChange {
     constructor(mesh) {
         this.mesh = mesh;
+        this.usedSize = {
+            width: mesh.userData.originalBox.max.x - mesh.userData.originalBox.min.x,
+            height: mesh.userData.originalBox.max.y - mesh.userData.originalBox.min.y,
+            depth: mesh.userData.originalBox.max.z - mesh.userData.originalBox.min.z,
+        }
     }
 
     operationSize(size) {
         for (const sizeKey in size) {
-            this.#formatNumber(size[sizeKey]);
+            size[sizeKey] = this.#formatNumber(size[sizeKey]);
         }
-        let usedSize = {
-            width: this.mesh.userData.originalBox.max.x - this.mesh.userData.originalBox.min.x,
-            height: this.mesh.userData.originalBox.max.y - this.mesh.userData.originalBox.min.y,
-            depth: this.mesh.userData.originalBox.max.z - this.mesh.userData.originalBox.min.z,
-        };
         // 是否需要修改
         let changeType = false;
-        for (const usedSizeKey in usedSize) {
+        for (const usedSizeKey in this.usedSize) {
             // 宽高深，任何一项不一致都会触发修改
-            if (usedSize[usedSizeKey] !== size[usedSizeKey]) {
+            if (this.usedSize[usedSizeKey] !== size[usedSizeKey]) {
                 changeType = true;
             }
         }
@@ -222,18 +222,26 @@ class meshChange {
                     group.attach(this.mesh.children[i]);
                 }
             }
-            this.mesh.scale.set(size.width / usedSize.width, size.height / usedSize.height, size.depth / usedSize.depth);
+            this.mesh.scale.set(size.width / this.usedSize.width, size.height / this.usedSize.height, size.depth / this.usedSize.depth);
             for (let i = group.children.length - 1; i >= 0; i--) {
                 this.mesh.attach(group.children[i]);
             }
         }
     }
 
-    operationPosition(position) {
+    operationPosition(position, chassisElement) {
+
+        let box = new THREE.Box3().expandByObject(this.mesh)
+        let usedSize = {
+            width: box.max.x - box.min.x,
+            height: box.max.y - box.min.y,
+            depth: box.max.z - box.min.z,
+        }
         for (const sizeKey in position) {
-            this.#formatNumber(position[sizeKey]);
+            position[sizeKey] = this.#formatNumber(position[sizeKey]);
         }
         let usedPosition = this.mesh.position;
+        console.log('新旧对比',usedPosition,position)
         let changeType = false;
         for (const usedPositionKey in usedPosition) {
             // 宽高深，任何一项不一致都会触发修改
@@ -242,7 +250,19 @@ class meshChange {
             }
         }
         if (changeType) {
-            this.mesh.position.set(position.x, -position.y, position.z);
+            let box = new THREE.Box3().expandByObject(chassisElement)
+            let boxSize = {
+                width: box.max.x - box.min.x,
+                height: box.max.y - box.min.y,
+                depth: box.max.z - box.min.z,
+            }
+            let newPosition = {
+                x: ((usedSize.width / 2) - (boxSize.width / 2)) + position.x,
+                y: ((usedSize.height / 2) - (boxSize.height / 2)) + position.y,
+                z: ((usedSize.depth / 2) - (boxSize.depth / 2)) + position.z,
+            }
+            console.log(usedSize,newPosition, position)
+            this.mesh.position.set(-newPosition.x, -newPosition.y, newPosition.z);
         }
     }
 
@@ -250,6 +270,7 @@ class meshChange {
         if (typeof num === 'string') {
             num = parseInt(num)
         }
+        return num;
     }
 }
 
@@ -259,54 +280,56 @@ let addElement = (width = 1, height = 1, depth = 1, color = '#409EFF') => {
     return new Promise((resolve, reject) => {
         const dracoLoader = new DRACOLoader();  //
         dracoLoader.setDecoderPath('static/glb/');//设置解压库文件路径
-        dracoLoader.setDecoderConfig({type: 'js'})  //使用js方式解压
+        dracoLoader.setDecoderConfig({ type: 'js' })  //使用js方式解压
         dracoLoader.preload()  //初始化_initDecoder 解码器
         const gltfLoader = new GLTFLoader(new LoadingManager());
         // GLTF loader
         gltfLoader.setDRACOLoader(dracoLoader);   //gltfloader使用dracoLoader
         gltfLoader.load(`static/glb/demo.glb`, (gltf) => {
+                console.log(gltf)
                 //创建一个立方体几何对象Geometry
                 let geometry = new THREE.BoxGeometry(width, height, depth);
                 // 添加一个透明的材质
                 let material = new THREE.MeshLambertMaterial({
-                    color: '#ff0000',
-                    opacity: 0,
+                    color: color,
+                    opacity: 0.3,
                     transparent: true
                 });
                 // 放到网格模型对象Mesh
-                let mesh = new THREE.Mesh(geometry, material);
+                // let mesh = new THREE.Mesh(geometry, material);
+                let mesh = new THREE.Group();
                 // 改变定点位置从右上前开始计算坐标值的位置
-                mesh.geometry.translate(width / 2, -(height / 2), -(depth / 2));
-                // 把模型的原始宽高深数据存起来、以后的缩放都需要这个数据进行
-                mesh.userData.originalBox = new THREE.Box3().expandByObject(mesh);
+                // mesh.geometry.translate(width / 2, -(height / 2), -(depth / 2));
                 // 创建一个新的组对象
                 let scene = gltf.scene;
-                let group = new THREE.Group();
-                let arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 25, 26, 27, 28];
+                scene.name = '子模型';
+                mesh.name = '父模型';
+                let group = scene;
+                // console.log(group)
+                // console.log(new THREE.Box3().expandByObject(group))
+                // let arr = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 25, 26, 27, 28 ];
                 // 把模型文件里面的东西依次从后向前剪切到组对象里面
-                for (let i = gltf.scene.children.length - 1; i >= 0; i--) {
-                    const item = scene.children[i];
-                    if (!arr.includes(i)) {
-                        // scene.remove(item);
-                    } else {
-                        group.attach(item);
-                    }
+                // for (let i = scene.children.length - 1; i >= 0; i--) {
+                //     const item = scene.children[i];
+                //     if (!arr.includes(i)) {
+                //         scene.remove(item);
+                //     } else {
+                //         // group.attach(item);
+                //     }
+                // }
 
-                }
-
-                group.userData.originalBox = new THREE.Box3().expandByObject(group);
-                let changeGroup = new meshChange(group);
+                mesh.attach(group);
+                mesh.userData.originalBox = new THREE.Box3().expandByObject(mesh);
+                // group.userData.originalBox = new THREE.Box3().expandByObject(group);
+                let changeGroup = new meshChange(mesh);
                 changeGroup.operationSize({
                     width: width,
                     height: height,
                     depth: depth,
                 });
-                changeGroup.operationPosition({
-                    x: width / 2,
-                    y: height / 2,
-                    z: -(depth / 2),
-                })
-                mesh.attach(group);
+                // console.log(group)
+                // 把模型的原始宽高深数据存起来、以后的缩放都需要这个数据进行
+                // console.log(mesh.userData.originalBox)
                 resolve(mesh)
             }, (xhr) => {
                 console.log((xhr.loaded / xhr.total * 100) + '% loaded');
