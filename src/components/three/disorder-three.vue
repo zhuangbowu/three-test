@@ -176,7 +176,7 @@ export default {
         changeCard.operationPosition({
           x: item.x,
           y: item.y,
-          z: -200,
+          z: -10,
         }, chassisElement)
       })
 
@@ -228,6 +228,7 @@ export default {
       let item = scene.children.filter(item => item.userData.data);
       exporter.parse(item, (glb) => {
         console.log(glb)
+
         this.download(`${ utils.setName() }.glb`, glb, 'application/octet-stream')
       }, (err) => {
         console.log(err)
@@ -249,13 +250,13 @@ export default {
 
       // Use download attribute to set set desired file name
       a.setAttribute("download", filename);
-
+      console.log(a)
       // Trigger the download by simulating click
-      a.click();
+      // a.click();
 
       // Cleanup
-      window.URL.revokeObjectURL(a.href);
-      document.body.removeChild(a);
+      // window.URL.revokeObjectURL(a.href);
+      // document.body.removeChild(a);
     },
     init() {
       let container = document.querySelector('#disorder');

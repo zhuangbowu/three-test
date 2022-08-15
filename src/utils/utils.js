@@ -241,7 +241,6 @@ class meshChange {
             position[sizeKey] = this.#formatNumber(position[sizeKey]);
         }
         let usedPosition = this.mesh.position;
-        console.log('新旧对比',usedPosition,position)
         let changeType = false;
         for (const usedPositionKey in usedPosition) {
             // 宽高深，任何一项不一致都会触发修改
